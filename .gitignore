@@ -1,1 +1,13 @@
+# Build artifacts
 build/
+bin/
+
+# Objects and Libraries
+*.o
+*.a
+*.so
+a.out
+*.exe
+
+# IDE
+.vscode/
