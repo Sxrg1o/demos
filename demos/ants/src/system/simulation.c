@@ -1,5 +1,6 @@
 #include "simulation.h"
 #include "ant_math.h"
+#include "ant_world.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -86,7 +87,7 @@ void view_populate(LocalView *view, const World *world, Position center) {
       if (world_in_bounds(world, world_pos)) {
         view->obstacles[view_y][view_x] = world_is_occupied(world, world_pos);
       } else {
-        view->obstacles[view_y][view_x] = true; // Out of bounds is obstacle
+        view->obstacles[view_y][view_x] = true;
       }
 
       view->food_scent[view_y][view_x] = 0;
@@ -155,6 +156,7 @@ void system_update_ant(Ant *ant, World *world) {
     case ACTION_PICKUP:
       if (action.resource) {
         ant->carried_resource = action.resource;
+        world_vacate_cell(world, action.resource->position);
       }
       ant_advance_plan(ant);
       break;
@@ -162,6 +164,7 @@ void system_update_ant(Ant *ant, World *world) {
     case ACTION_DROP:
       if (ant->carried_resource) {
         ant->carried_resource->position = action.target;
+        world_occupy_cell(world, action.resource->position);
         ant->carried_resource = NULL;
       }
       ant_advance_plan(ant);
