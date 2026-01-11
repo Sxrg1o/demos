@@ -7,41 +7,46 @@
 
 #define PLAN_SIZE 3
 #define ANT_DEFAULT_LIFE 100
-#define ANT_DEFAULT_WEIGHT 10
 #define ANT_DEFAULT_RADIUS 5
 
 typedef enum {
-  ACTION_WAIT,
-  ACTION_MOVE_LEFT,
-  ACTION_MOVE_UP_LEFT,
-  ACTION_MOVE_UP,
-  ACTION_MOVE_UP_RIGHT,
-  ACTION_MOVE_RIGHT,
-  ACTION_MOVE_DOWN_RIGHT,
-  ACTION_MOVE_DOWN,
-  ACTION_MOVE_DOWN_LEFT,
+  ORIENTATION_NORTH,
+  ORIENTATION_NORTH_EAST,
+  ORIENTATION_EAST,
+  ORIENTATION_SOUTH_EAST,
+  ORIENTATION_SOUTH,
+  ORIENTATION_SOUTH_WEST,
+  ORIENTATION_WEST,
+  ORIENTATION_NORTH_WEST
+} Orientation;
+
+typedef enum {
+  ACTION_IDLE,
+  ACTION_MOVE_TO,
   ACTION_PICKUP,
   ACTION_DROP
 } ActionType;
 
 typedef struct {
+  ActionType type;
+  Position target;
+  Resource *resource;
+} Action;
+
+typedef struct {
   int radius;
   int diameter;
-  // [0][0] top-left corner,
-  // [radius][radius] ant location (center).
   bool **obstacles;
   int **food_scent;
 } LocalView;
 
 typedef struct {
   Position position;
-  int attention_radius;
-  int velocity;
-  int weight_g;
+  Orientation orientation;
   int life;
   Resource *carried_resource;
-  ActionType action_queue[PLAN_SIZE];
-  int actions_queued;
+  Action current_plan[PLAN_SIZE];
+  int plan_length;
 } Ant;
 
 // Lifecycle
@@ -50,13 +55,11 @@ void ant_free(Ant *ant);
 
 // Actions
 void ant_think(Ant *ant, const LocalView *view);
-bool ant_next_action(Ant *ant);
+bool ant_get_current_action(const Ant *ant, Action *action);
+void ant_advance_plan(Ant *ant);
 void ant_clear_plan(Ant *ant);
-bool ant_move(Ant *ant, Position pos);
-bool ant_carry(Ant *ant, Resource *resource);
-void ant_consume(Ant *ant);
-bool ant_drop(Ant *ant, Position pos);
 
-Position action_to_offset(ActionType action);
+Position orientation_to_offset(Orientation orient);
+Orientation offset_to_orientation(Position offset);
 
 #endif // ANT_H

@@ -1,41 +1,50 @@
 #include "ant.h"
-#include "resource.h"
 #include <string.h>
 
-static const Position DIRECTION_OFFSETS[] = {
-    [ACTION_WAIT] = {0, 0},
-    [ACTION_MOVE_LEFT] = {-1, 0},
-    [ACTION_MOVE_UP_LEFT] = {-1, -1},
-    [ACTION_MOVE_UP] = {0, -1},
-    [ACTION_MOVE_UP_RIGHT] = {1, -1},
-    [ACTION_MOVE_RIGHT] = {1, 0},
-    [ACTION_MOVE_DOWN_RIGHT] = {1, 1},
-    [ACTION_MOVE_DOWN] = {0, 1},
-    [ACTION_MOVE_DOWN_LEFT] = {-1, 1},
-    [ACTION_PICKUP] = {0, 0},
-    [ACTION_DROP] = {0, 0},
+static const Position ORIENTATION_OFFSETS[] = {
+    [ORIENTATION_NORTH] = {0, -1}, [ORIENTATION_NORTH_EAST] = {1, -1},
+    [ORIENTATION_EAST] = {1, 0},   [ORIENTATION_SOUTH_EAST] = {1, 1},
+    [ORIENTATION_SOUTH] = {0, 1},  [ORIENTATION_SOUTH_WEST] = {-1, 1},
+    [ORIENTATION_WEST] = {-1, 0},  [ORIENTATION_NORTH_WEST] = {-1, -1},
 };
 
-Position action_to_offset(ActionType action) {
-  if (action < 0 || action > ACTION_DROP) {
+Position orientation_to_offset(Orientation orient) {
+  if (orient < 0 || orient > ORIENTATION_NORTH_WEST) {
     return (Position){0, 0};
   }
-  return DIRECTION_OFFSETS[action];
+  return ORIENTATION_OFFSETS[orient];
+}
+
+Orientation offset_to_orientation(Position offset) {
+  if (offset.x == 0 && offset.y == -1)
+    return ORIENTATION_NORTH;
+  if (offset.x == 1 && offset.y == -1)
+    return ORIENTATION_NORTH_EAST;
+  if (offset.x == 1 && offset.y == 0)
+    return ORIENTATION_EAST;
+  if (offset.x == 1 && offset.y == 1)
+    return ORIENTATION_SOUTH_EAST;
+  if (offset.x == 0 && offset.y == 1)
+    return ORIENTATION_SOUTH;
+  if (offset.x == -1 && offset.y == 1)
+    return ORIENTATION_SOUTH_WEST;
+  if (offset.x == -1 && offset.y == 0)
+    return ORIENTATION_WEST;
+  if (offset.x == -1 && offset.y == -1)
+    return ORIENTATION_NORTH_WEST;
+  return ORIENTATION_NORTH;
 }
 
 void ant_init(Ant *ant, Position pos) {
   if (!ant) {
     return;
   }
-
   memset(ant, 0, sizeof(*ant));
   ant->position = pos;
-  ant->attention_radius = ANT_DEFAULT_RADIUS;
-  ant->velocity = 1;
-  ant->weight_g = ANT_DEFAULT_WEIGHT;
+  ant->orientation = ORIENTATION_SOUTH;
   ant->life = ANT_DEFAULT_LIFE;
   ant->carried_resource = NULL;
-  ant->actions_queued = 0;
+  ant->plan_length = 0;
 }
 
 void ant_free(Ant *ant) {
@@ -46,60 +55,28 @@ void ant_free(Ant *ant) {
 }
 
 void ant_think(Ant *ant, const LocalView *view) {
-  if (!ant || !view) {
-    return;
-  }
+  // TODO: Implement AI decision making
 }
 
-bool ant_next_action(Ant *ant) {
-  if (!ant || ant->actions_queued <= 0) {
+bool ant_get_current_action(const Ant *ant, Action *action) {
+  if (!ant || ant->plan_length <= 0 || !action) {
     return false;
   }
-
-  for (int i = 0; i < ant->actions_queued - 1; i++) {
-    ant->action_queue[i] = ant->action_queue[i + 1];
-  }
-  ant->actions_queued--;
-
+  *action = ant->current_plan[0];
   return true;
+}
+
+void ant_advance_plan(Ant *ant) {
+  if (!ant || ant->plan_length <= 0) {
+    return;
+  }
+  for (int i = 0; i < ant->plan_length - 1; i++) {
+    ant->current_plan[i] = ant->current_plan[i + 1];
+  }
+  ant->plan_length--;
 }
 
 void ant_clear_plan(Ant *ant) {
-  if (!ant) {
-    return;
-  }
-  ant->actions_queued = 0;
-}
-
-bool ant_move(Ant *ant, Position pos) {
-  if (!ant) {
-    return false;
-  }
-  ant->position = pos;
-  return true;
-}
-
-bool ant_carry(Ant *ant, Resource *resource) {
-  if (!ant || !resource) {
-    return false;
-  }
-
-  ant->carried_resource = resource;
-  return true;
-}
-
-void ant_consume(Ant *ant) {
-  if (!ant || !ant->carried_resource) {
-    return;
-  }
-}
-
-bool ant_drop(Ant *ant, Position pos) {
-  if (!ant || !ant->carried_resource) {
-    return false;
-  }
-
-  ant->carried_resource->position = pos;
-  ant->carried_resource = NULL;
-  return true;
+  if (ant)
+    ant->plan_length = 0;
 }
