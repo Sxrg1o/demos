@@ -1,11 +1,12 @@
 #pragma once
 
 #include <stdbool.h>
-#include <raymath.h>
+#include <raylib.h>
 #include <string.h>
 
 typedef struct {
     char name[10];
+    Color color;
     float density;              // Just mass calculations
     float stiffness;            // For material physics
     float tensile_strength;     // Threshold for link breaking
@@ -55,3 +56,4 @@ void init_world(World*);
 void init_materials(BMaterial*);
 void create_node(World*, Vector2, BMaterial*);
 void create_link(World*, Node*, Node*);
+bool link_exists(World*, Node*, Node*);

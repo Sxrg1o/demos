@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <raymath.h>
 #include <string.h>
 
 #include "logic.h"
@@ -17,24 +18,27 @@ void init_materials(BMaterial* material_list) {
     material_list[WOOD].tensile_strength = 1.05f;
     material_list[WOOD].compression = 1.0f;
     material_list[WOOD].friction = 0.5f;
-    material_list[WOOD].radius = 5.0f;
+    material_list[WOOD].radius = 10.0f;
     strncpy(material_list[WOOD].name, "Wood", 9);
+    material_list[WOOD].color = DARKBROWN;
 
     material_list[ROPE].density = 2.0f;
     material_list[ROPE].stiffness = 0.8f;
     material_list[ROPE].tensile_strength = 1.5f;
     material_list[ROPE].compression = 0.0f;
     material_list[ROPE].friction = 0.8f;
-    material_list[ROPE].radius = 2.0f;
+    material_list[ROPE].radius = 4.0f;
     strncpy(material_list[ROPE].name, "Rope", 9);
+    material_list[ROPE].color = BEIGE;
 
     material_list[SPRING].density = 5.0f;
     material_list[SPRING].stiffness = 0.1f;
     material_list[SPRING].tensile_strength = 5.0f;
     material_list[SPRING].compression = 1.0f;
     material_list[SPRING].friction = 0.3f;
-    material_list[SPRING].radius = 3.0f;
+    material_list[SPRING].radius = 6.0f;
     strncpy(material_list[SPRING].name, "Spring", 9);
+    material_list[SPRING].color = GRAY;
 }
 
 void create_node(World* world, Vector2 position, BMaterial* material_list) {
@@ -62,4 +66,13 @@ void create_link(World* world, Node* a, Node* b) {
     world->links[idx].b = b;
     world->links[idx].ideal_length = Vector2Distance(b->position, a->position);
     world->link_count++;
+}
+
+bool link_exists(World* world, Node* a, Node* b) {
+    for(int i = 0; i < world->link_count; i++) {
+        Link* l = &world->links[i];
+
+        if((l->a == a && l->b == b) || (l->a == b && l->b == a)) return true;
+    }
+    return false;
 }
