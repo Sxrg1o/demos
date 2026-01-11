@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -g -O2 
-LDFLAGS = -lraylib -lm
+LDFLAGS = -lraylib -lm -pthread -ldl -lrt -lGL -lX11
 
 ifndef DEMO
 $(error Uso: make run DEMO=billar)
@@ -13,7 +13,7 @@ BUILD_DIR = $(PROJECT_DIR)/build
 
 CFLAGS += -I$(INCLUDE_DIR)
 
-SRCS = $(wildcard $(SRC_DIR)/*.c)
+SRCS := $(shell find $(SRC_DIR) -name '*.c')
 
 OBJS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRCS))
 
@@ -27,7 +27,7 @@ $(TARGET): $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 run: all
