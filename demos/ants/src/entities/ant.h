@@ -1,22 +1,62 @@
 #ifndef ANT_H
 #define ANT_H
 
-#include "../config/error.h"
 #include "../system/ant_math.h"
 #include "resource.h"
 #include <stdbool.h>
 
+#define PLAN_SIZE 3
+#define ANT_DEFAULT_LIFE 100
+#define ANT_DEFAULT_WEIGHT 10
+#define ANT_DEFAULT_RADIUS 5
+
+typedef enum {
+  ACTION_WAIT,
+  ACTION_MOVE_LEFT,
+  ACTION_MOVE_UP_LEFT,
+  ACTION_MOVE_UP,
+  ACTION_MOVE_UP_RIGHT,
+  ACTION_MOVE_RIGHT,
+  ACTION_MOVE_DOWN_RIGHT,
+  ACTION_MOVE_DOWN,
+  ACTION_MOVE_DOWN_LEFT,
+  ACTION_PICKUP,
+  ACTION_DROP
+} ActionType;
+
 typedef struct {
-  int carry_weight_g;
+  int radius;
+  int diameter;
+  // [0][0] top-left corner,
+  // [radius][radius] ant location (center).
+  bool **obstacles;
+  int **food_scent;
+} LocalView;
+
+typedef struct {
+  Position position;
+  int attention_radius;
+  int velocity;
   int weight_g;
   int life;
-  bool carring_food;
+  Resource *carried_resource;
+  ActionType action_queue[PLAN_SIZE];
+  int actions_queued;
 } Ant;
 
-void resource_carry(const Ant *ant, const Resource *resource, ReturnCode *rc);
-void resource_consume(const Ant *ant, const Resource *resource, ReturnCode *rc);
-void resource_drop(const Ant *ant, const Resource *resource, const Position pos,
-                   ReturnCode *rc);
-void ant_free(Ant *ant, ReturnCode *rc);
+// Lifecycle
+void ant_init(Ant *ant, Position pos);
+void ant_free(Ant *ant);
+
+// Actions
+void ant_think(Ant *ant, const LocalView *view);
+bool ant_next_action(Ant *ant);
+void ant_clear_plan(Ant *ant);
+bool ant_move(Ant *ant, Position pos);
+bool ant_carry(Ant *ant, Resource *resource);
+void ant_consume(Ant *ant);
+bool ant_drop(Ant *ant, Position pos);
+
+Position action_to_offset(ActionType action);
 
 #endif // ANT_H

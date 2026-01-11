@@ -1,15 +1,20 @@
 #include "resource.h"
-#include <assert.h>
 #include <string.h>
 
-void resource_free(Resource *r, ReturnCode *rc) {
-  assert(rc);
-
+void resource_init(Resource *r, Position pos, int value, int weight,
+                   ResourceType type) {
   if (!r) {
-    *rc = RC_NULL_VALUE_ERROR;
     return;
   }
+  r->position = pos;
+  r->value = value;
+  r->weight = weight;
+  r->type = type;
+}
 
+void resource_free(Resource *r) {
+  if (!r) {
+    return;
+  }
   memset(r, 0, sizeof(*r));
-  *rc = RC_SUCCESS;
 }

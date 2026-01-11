@@ -6,4 +6,6 @@ typedef struct {
   int y;
 } Position;
 
+Position position_add(const Position a, const Position b);
+
 #endif // ANT_MATH_H
