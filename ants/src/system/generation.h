@@ -4,7 +4,6 @@
 #include "../entities/resource.h"
 #include "ant_world.h"
 
-int generate_world_content(World *world, Resource *resources,
-                           int max_resources);
+int gen_world(World *world, int max_resources);
 
 #endif // GENERATION_H

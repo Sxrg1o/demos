@@ -8,9 +8,9 @@ typedef struct {
   int width;
   int height;
   bool **grid;
+  int **food_scent;
 } World;
 
-// Returns 0 on success, -1 on failure
 int world_init(World *w, int width, int height);
 void world_free(World *w);
 bool world_in_bounds(const World *w, Position p);

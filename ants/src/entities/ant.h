@@ -2,6 +2,7 @@
 #define ANT_H
 
 #include "../system/ant_math.h"
+#include "../system/ant_world.h"
 #include "resource.h"
 #include <stdbool.h>
 
@@ -11,18 +12,14 @@
 
 typedef enum {
   ORIENTATION_NORTH,
-  ORIENTATION_NORTH_EAST,
   ORIENTATION_EAST,
-  ORIENTATION_SOUTH_EAST,
   ORIENTATION_SOUTH,
-  ORIENTATION_SOUTH_WEST,
   ORIENTATION_WEST,
-  ORIENTATION_NORTH_WEST
 } Orientation;
 
 typedef enum {
   ACTION_IDLE,
-  ACTION_MOVE_TO,
+  ACTION_MOVE,
   ACTION_PICKUP,
   ACTION_DROP
 } ActionType;
@@ -34,32 +31,28 @@ typedef struct {
 } Action;
 
 typedef struct {
-  int radius;
-  int diameter;
-  bool **obstacles;
-  int **food_scent;
-} LocalView;
-
-typedef struct {
   Position position;
   Orientation orientation;
-  int life;
   Resource *carried_resource;
-  Action current_plan[PLAN_SIZE];
+  Action plan[PLAN_SIZE];
   int plan_length;
+  int plan_idx;
 } Ant;
 
 // Lifecycle
 void ant_init(Ant *ant, Position pos);
 void ant_free(Ant *ant);
 
-// Actions
-void ant_think(Ant *ant, const LocalView *view);
-bool ant_get_current_action(const Ant *ant, Action *action);
-void ant_advance_plan(Ant *ant);
+// Plan
+void ant_think(Ant *ant, const World *w);
+bool ant_next_action(Ant *ant, Action *action);
 void ant_clear_plan(Ant *ant);
 
-Position orientation_to_offset(Orientation orient);
-Orientation offset_to_orientation(Position offset);
+// Action
+Action action_create_idle();
+Action action_create_move(const Position dest);
+Action action_create_pickup(const Resource *resource);
+Action action_create_drop(const Resource *resource, const Position pos);
+void action_free(Action *action);
 
 #endif // ANT_H

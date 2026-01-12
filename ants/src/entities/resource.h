@@ -4,8 +4,7 @@
 #include "../system/ant_math.h"
 
 typedef enum {
-  RESOURCE_OTHER,
-  RESOURCE_STRUCTURAL,
+  RESOURCE_DIRT,
   RESOURCE_FOOD,
 } ResourceType;
 
