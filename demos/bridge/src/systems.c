@@ -45,6 +45,32 @@ void update_physics(World* world, float delta_time) {
                 Vector2Scale(correction_vector, world->links[i].b->inv_mass / w_total));
         }
     }
+
+    for(int i = 0; i < world->node_count; i++) {
+        // TODO: Better collision system, rn just with floor 
+        if(world->nodes[i].position.y + world->nodes[i].material->radius > 900.0f) {
+            world->nodes[i].position.y = 900.0f - world->nodes[i].material->radius;
+            float vel_x = world->nodes[i].position.x - world->nodes[i].prev_position.x;
+            world->nodes[i].prev_position.x = world->nodes[i].position.x - 
+                (vel_x * (1.0f - world->nodes[i].material->friction));
+        }
+
+        if(world->nodes[i].position.x + world->nodes[i].material->radius > 1600.0f) {
+            world->nodes[i].position.x = 1600.0f - world->nodes[i].material->radius;
+            float vel_y = world->nodes[i].position.y - world->nodes[i].prev_position.y;
+            world->nodes[i].prev_position.y = world->nodes[i].position.y -
+                (vel_y * (1.0f - world->nodes[i].material->friction));
+        }
+    }
+
+    for(int i = 0; i < world->link_count; i++) {
+        float max_length = world->links[i].ideal_length * world->links[i].a->material->tensile_strength;
+        float distance = Vector2Distance(world->links[i].a->position, world->links[i].b->position);
+        if(distance > max_length) {
+            destroy_link(world, i);
+            i--;
+        }
+    }
 }
 
 void update_render(World* world) {

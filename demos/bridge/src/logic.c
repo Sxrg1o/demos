@@ -76,3 +76,8 @@ bool link_exists(World* world, Node* a, Node* b) {
     }
     return false;
 }
+
+void destroy_link(World* world, int idx) {
+    world->links[idx] = world->links[world->link_count - 1];
+    world->link_count--;
+}

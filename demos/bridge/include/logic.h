@@ -57,3 +57,4 @@ void init_materials(BMaterial*);
 void create_node(World*, Vector2, BMaterial*);
 void create_link(World*, Node*, Node*);
 bool link_exists(World*, Node*, Node*);
+void destroy_link(World*, int);
