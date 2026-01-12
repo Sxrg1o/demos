@@ -4,6 +4,8 @@
 #include "logic.h"
 #include "systems.h"
 
+#define PHYS_DT (1.0f / 60.0f)
+
 int main(void) {
     const int screen_width = 1600;
     const int screen_height = 900;
@@ -16,12 +18,15 @@ int main(void) {
     init_materials(material_list);
 
     double current_time = GetTime();
+    double accumulator = 0.0;
     int last_node_idx = -1;
 
     while(!WindowShouldClose()) {
         double new_time = GetTime();
-        double delta_time = new_time - current_time;
+        double frame_time = new_time - current_time;
         current_time = new_time;
+
+        if(frame_time > 0.25) frame_time = 0.25;
 
         if(IsKeyPressed(KEY_W)) world.state.material_type = WOOD;
         if(IsKeyPressed(KEY_S)) world.state.material_type = SPRING;
@@ -42,6 +47,7 @@ int main(void) {
         }
 
         if(world.state.building) {
+            accumulator = 0.0;
             if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 int current_target_idx = -1;
 
@@ -62,7 +68,12 @@ int main(void) {
 
             if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) last_node_idx = -1;
         } else {
-            update_physics(&world, delta_time);
+            accumulator += frame_time;
+
+            while(accumulator >= PHYS_DT) {
+                update_physics(&world, PHYS_DT);
+                accumulator -= PHYS_DT;
+            }
         } 
 
         BeginDrawing();
