@@ -9,7 +9,7 @@ typedef struct {
 typedef struct {
   double x;
   double y;
-} Vector2;
+} AntVector;
 
 Position position_add(const Position a, const Position b);
 

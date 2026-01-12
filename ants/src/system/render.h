@@ -6,12 +6,13 @@
 #include "ant_world.h"
 #include <stdint.h>
 
-#define COLOR_SKY 0xFFEBCE87   // Light Blue (R=87, G=CE, B=EB)
-#define COLOR_EARTH 0xFF13458B // Saddle Brown (R=8B, G=45, B=13)
+#define COLOR_SKY 0x87CEEBFF   // Light Blue (R=87, G=CE, B=EB)
+#define COLOR_EARTH 0x8B4513FF // Saddle Brown (R=8B, G=45, B=13)
 #define COLOR_FOOD 0xFF0000FF  // Red
-#define COLOR_DIRT 0xFF58DBFF  // Mustard (R=FF, G=DB, B=58)
-#define COLOR_ANT 0xFF000000   // Black
-#define COLOR_OTHER 0xFF808080 // Grey
+#define COLOR_DIRT 0xFFDB58FF  // Mustard (R=FF, G=DB, B=58)
+#define COLOR_ANT 0x000000FF   // Black
+#define COLOR_OTHER 0x808080FF // Grey
 
+void render_world(const World *w);
 
 #endif // RENDER_H
