@@ -5,13 +5,10 @@
 void gen_world(World *world, unsigned int seed) {
   srand(seed);
   float surface_base = world->height * 0.3f;
-
   float surface_amp = world->height * 0.1f;
   float surface_freq = 0.05f;
-
   float cave_freq = 0.1f;
-  float cave_threshold = 0.8f;
-
+  float cave_threshold = 0.65f;
   int num_deposits = 5 + (rand() % 5);
 
   for (int x = 0; x < world->width; x++) {
