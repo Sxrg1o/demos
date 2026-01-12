@@ -6,7 +6,7 @@ ifndef DEMO
 $(error Uso: make run DEMO=billar)
 endif
 
-PROJECT_DIR = demos/$(DEMO)
+PROJECT_DIR = $(DEMO)
 SRC_DIR = $(PROJECT_DIR)/src
 INCLUDE_DIR = $(PROJECT_DIR)/include
 BUILD_DIR = $(PROJECT_DIR)/build
