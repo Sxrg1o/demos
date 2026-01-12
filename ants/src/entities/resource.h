@@ -9,14 +9,12 @@ typedef enum {
 } ResourceType;
 
 typedef struct {
-  Position position;
   int value;
   int weight;
   ResourceType type;
 } Resource;
 
-void resource_init(Resource *r, Position pos, int value, int weight,
-                   ResourceType type);
+void resource_init(Resource *r, int value, int weight, ResourceType type);
 void resource_free(Resource *r);
 
 #endif // RESOURCE_H

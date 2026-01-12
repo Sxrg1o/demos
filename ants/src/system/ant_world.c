@@ -10,23 +10,10 @@ int world_init(World *w, int width, int height) {
   w->width = width;
   w->height = height;
 
-  w->grid = malloc(sizeof(bool *) * height);
+  w->grid = malloc(sizeof(Cell) * width * height);
   if (!w->grid) {
     return -1;
   }
-
-  for (int i = 0; i < height; i++) {
-    w->grid[i] = calloc(width, sizeof(bool));
-    if (!w->grid[i]) {
-      for (int j = 0; j < i; j++) {
-        free(w->grid[j]);
-      }
-      free(w->grid);
-      w->grid = NULL;
-      return -1;
-    }
-  }
-
   return 0;
 }
 
@@ -35,11 +22,7 @@ void world_free(World *w) {
     return;
   }
 
-  for (int i = 0; i < w->height; i++) {
-    free(w->grid[i]);
-  }
   free(w->grid);
-
   w->grid = NULL;
   w->width = 0;
   w->height = 0;
@@ -56,19 +39,22 @@ bool world_is_occupied(const World *w, Position p) {
   if (!w || !w->grid || !world_in_bounds(w, p)) {
     return true;
   }
-  return w->grid[p.y][p.x];
+  return w->grid[p.y * w->width + p.x].type != CELL_EMPTY;
 }
 
-void world_occupy_cell(World *w, Position p) {
+void world_occupy_cell(World *w, Position p, Cell cell) {
   if (!w || !w->grid || !world_in_bounds(w, p)) {
     return;
   }
-  w->grid[p.y][p.x] = true;
+  w->grid[p.y * w->width + p.x].resource = cell.resource;
+  w->grid[p.y * w->width + p.x].ant_id = cell.ant_id;
+  w->grid[p.y * w->width + p.x].type = cell.type;
 }
 
 void world_vacate_cell(World *w, Position p) {
   if (!w || !w->grid || !world_in_bounds(w, p)) {
     return;
   }
-  w->grid[p.y][p.x] = false;
+  w->grid[p.y * w->width + p.x].type = CELL_EMPTY;
+  w->grid[p.y * w->width + p.x].ant_id = 0;
 }
