@@ -1,14 +1,17 @@
 #ifndef ANT_WORLD_H
 #define ANT_WORLD_H
 
+#include "../entities/ant.h"
 #include "../entities/resource.h"
 #include "ant_math.h"
 #include <stdbool.h>
+#define MAX_ANTS 100
 
 typedef enum {
   CELL_EMPTY,
   CELL_RESOURCE,
   CELL_ANT,
+  CELL_NEST,
 } CellType;
 
 typedef struct {
@@ -23,6 +26,8 @@ typedef struct {
   int width;
   int height;
   Cell *grid;
+  Ant ants[MAX_ANTS];
+  int num_ants;
 } World;
 
 int world_init(World *w, int width, int height);

@@ -4,6 +4,6 @@
 #include "../entities/resource.h"
 #include "ant_world.h"
 
-void gen_world(World *world, int max_resources);
+void gen_world(World *world, unsigned int seed);
 
 #endif // GENERATION_H

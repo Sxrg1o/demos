@@ -9,10 +9,16 @@ int world_init(World *w, int width, int height) {
 
   w->width = width;
   w->height = height;
-
+  w->num_ants = 0;
   w->grid = malloc(sizeof(Cell) * width * height);
   if (!w->grid) {
     return -1;
+  }
+  memset(w->grid, 0, sizeof(Cell) * width * height);
+  for (int x = 0; x < width; x++) {
+    for (int y = 0; y < height; y++) {
+      w->grid[y * width + x].type = CELL_EMPTY;
+    }
   }
   return 0;
 }

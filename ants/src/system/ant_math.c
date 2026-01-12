@@ -1,5 +1,34 @@
 #include "ant_math.h"
+#include <math.h>
 
-Position position_add(const Position a, const Position b) {
-  return (Position){a.x + b.x, a.y + b.y};
+static int hash(int x, int y, int seed) {
+  int h = seed + x * 374761393 + y * 668265263;
+  h = (h ^ (h >> 13)) * 1274126177;
+  return h ^ (h >> 16);
+}
+
+float lerp(float a, float b, float t) { return a + t * (b - a); }
+
+float smoothstep(float t) { return t * t * (3.0f - 2.0f * t); }
+
+float noise2d(float x, float y, int seed) {
+  int xi = (int)floorf(x);
+  int yi = (int)floorf(y);
+
+  float tx = x - xi;
+  float ty = y - yi;
+
+  float sx = smoothstep(tx);
+  float sy = smoothstep(ty);
+
+  // Hash corners
+  float n00 = (hash(xi, yi, seed) & 0xFFFF) / 65535.0f;
+  float n10 = (hash(xi + 1, yi, seed) & 0xFFFF) / 65535.0f;
+  float n01 = (hash(xi, yi + 1, seed) & 0xFFFF) / 65535.0f;
+  float n11 = (hash(xi + 1, yi + 1, seed) & 0xFFFF) / 65535.0f;
+
+  float nx0 = lerp(n00, n10, sx);
+  float nx1 = lerp(n01, n11, sx);
+
+  return lerp(nx0, nx1, sy);
 }

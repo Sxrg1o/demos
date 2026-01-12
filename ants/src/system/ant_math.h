@@ -11,6 +11,8 @@ typedef struct {
   double y;
 } AntVector;
 
-Position position_add(const Position a, const Position b);
+float lerp(float a, float b, float t);
+float smoothstep(float t);
+float noise2d(float x, float y, int seed);
 
 #endif // ANT_MATH_H
