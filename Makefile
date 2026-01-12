@@ -1,6 +1,18 @@
 CC = gcc
-CFLAGS = -Wall -g -O2 
-LDFLAGS = -lraylib -lm -pthread -ldl -lrt -lGL -lX11
+ifdef OS
+   RM = cmd /c del /Q
+   FixPath = $(subst /,\,$1)
+   
+   RAYLIB_PATH = C:/Users/LENOVO/raylib
+   
+   CFLAGS = -Wall -g -O2 -I$(RAYLIB_PATH)/include
+   LDFLAGS = -L$(RAYLIB_PATH)/lib -lraylib -lopengl32 -lgdi32 -lwinmm
+else
+   RM = rm -f
+   FixPath = $1
+   CFLAGS = -Wall -g -O2 
+   LDFLAGS = -lraylib -lm -pthread -ldl -lrt -lGL -lX11
+endif
 
 ifndef DEMO
 $(error Uso: make run DEMO=billar)
@@ -40,4 +52,4 @@ dir_check:
 	fi
 
 clean:
-	rm -rf $(BUILD_DIR)
+	$(RM) $(subst /,\,$(OBJS)) $(subst /,\,$(TARGET).exe)

@@ -115,15 +115,15 @@ void update_physics(World* world, float delta_time) {
     }
 
     for(int i = 0; i < world->node_count; i++) {
-        if(world->nodes[i].position.y + world->nodes[i].material->radius > 900.0f) {
-            world->nodes[i].position.y = 900.0f - world->nodes[i].material->radius;
+        if(world->nodes[i].position.y + world->nodes[i].material->radius > GetScreenHeight()) {
+            world->nodes[i].position.y = GetScreenHeight() - world->nodes[i].material->radius;
             float vel_x = world->nodes[i].position.x - world->nodes[i].prev_position.x;
             world->nodes[i].prev_position.x = world->nodes[i].position.x - 
                 (vel_x * (1.0f - world->nodes[i].material->friction));
         }
 
-        if(world->nodes[i].position.x + world->nodes[i].material->radius > 1600.0f) {
-            world->nodes[i].position.x = 1600.0f - world->nodes[i].material->radius;
+        if(world->nodes[i].position.x + world->nodes[i].material->radius > GetScreenWidth()) {
+            world->nodes[i].position.x = GetScreenWidth() - world->nodes[i].material->radius;
             float vel_y = world->nodes[i].position.y - world->nodes[i].prev_position.y;
             world->nodes[i].prev_position.y = world->nodes[i].position.y -
                 (vel_y * (1.0f - world->nodes[i].material->friction));

@@ -8,8 +8,9 @@
 #define PHYS_STEPS 8
 
 int main(void) {
-    const int screen_width = 1600;
-    const int screen_height = 900;
+    const int mult = 50;
+    const int screen_width = 16 * mult;
+    const int screen_height = 9 * mult;
 
     InitWindow(screen_width, screen_height, "bridge");
 
