@@ -5,6 +5,7 @@
 #include "systems.h"
 
 #define PHYS_DT (1.0f / 60.0f)
+#define PHYS_STEPS 8
 
 int main(void) {
     const int screen_width = 1600;
@@ -31,6 +32,7 @@ int main(void) {
         if(IsKeyPressed(KEY_W)) world.state.material_type = WOOD;
         if(IsKeyPressed(KEY_S)) world.state.material_type = SPRING;
         if(IsKeyPressed(KEY_R)) world.state.material_type = ROPE;
+        if(IsKeyPressed(KEY_T)) world.state.material_type = STONE;
         if(IsKeyPressed(KEY_F)) world.state.fix = !world.state.fix;
         if(IsKeyPressed(KEY_SPACE)) world.state.building = !world.state.building;
 
@@ -54,16 +56,30 @@ int main(void) {
                 if(hovered_node_idx != -1) {
                     current_target_idx = hovered_node_idx;
                 } else {
-                    create_node(&world, mouse_pos, material_list);
-                    current_target_idx = world.node_count - 1;
+                    if(world.node_count < MAX_NODES) {
+                        create_node(&world, mouse_pos, material_list);
+                        current_target_idx = world.node_count - 1;
+                    } else {
+                        current_target_idx = -1;
+                    }
                 }
+
+                Node* curr_node = &world.nodes[current_target_idx];
+                BMaterial* stone_material = &material_list[STONE];
     
                 if(last_node_idx != -1 && last_node_idx != current_target_idx) {
                     Node* prev_node = &world.nodes[last_node_idx];
-                    Node* curr_node = &world.nodes[current_target_idx];
-                    if(!link_exists(&world, prev_node, curr_node)) create_link(&world, prev_node, curr_node);
+
+                    if(prev_node->material != stone_material && curr_node->material != stone_material 
+                        && !link_exists(&world, prev_node, curr_node) && world.link_count < MAX_LINKS) {
+                        create_link(&world, prev_node, curr_node);
+                    }
                 }
-                last_node_idx = current_target_idx;
+                if(curr_node->material == stone_material) {
+                    last_node_idx = -1;
+                } else {
+                    last_node_idx = current_target_idx;
+                }
             }
 
             if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) last_node_idx = -1;
@@ -71,7 +87,7 @@ int main(void) {
             accumulator += frame_time;
 
             while(accumulator >= PHYS_DT) {
-                update_physics(&world, PHYS_DT);
+                for(int i = 0; i < PHYS_STEPS; i++) update_physics(&world, PHYS_DT);
                 accumulator -= PHYS_DT;
             }
         } 
@@ -94,6 +110,11 @@ int main(void) {
                     DrawCircleLinesV(world.nodes[hovered_node_idx].position, 12.0f, GREEN);
                     DrawText("Link", world.nodes[hovered_node_idx].position.x + 10, world.nodes[hovered_node_idx].position.y - 20, 10, DARKGREEN);
                 }
+                Color node_color = (world.node_count >= MAX_NODES * 0.9f) ? RED : DARKGRAY;
+                Color link_color = (world.link_count >= MAX_LINKS * 0.9f) ? RED : DARKGRAY;
+
+                DrawText(TextFormat("Nodes: %d / %d", world.node_count, MAX_NODES), 10, screen_height - 60, 20, node_color);
+                DrawText(TextFormat("Links: %d / %d", world.link_count, MAX_LINKS), 10, screen_height - 30, 20, link_color);
                 if(world.state.fix) {
                     DrawText("Static node [F]", 10, 70, 20, RED);
                 } else {

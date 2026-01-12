@@ -39,6 +39,15 @@ void init_materials(BMaterial* material_list) {
     material_list[SPRING].radius = 6.0f;
     strncpy(material_list[SPRING].name, "Spring", 9);
     material_list[SPRING].color = GRAY;
+
+    material_list[STONE].density = 100.0f;
+    material_list[STONE].stiffness = 0.0f;
+    material_list[STONE].tensile_strength = 0.0f;
+    material_list[STONE].compression = 0.0f;
+    material_list[STONE].friction = 0.9f;
+    material_list[STONE].radius = 60.0f;
+    strncpy(material_list[STONE].name, "Stone", 9);
+    material_list[STONE].color = DARKGRAY;
 }
 
 void create_node(World* world, Vector2 position, BMaterial* material_list) {

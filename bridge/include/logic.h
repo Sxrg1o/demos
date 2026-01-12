@@ -30,12 +30,13 @@ typedef struct {
     float ideal_length;
 } Link;
 
-#define MATERIALS_COUNT 3
+#define MATERIALS_COUNT 4
 
 typedef enum {
     WOOD,
     ROPE,
-    SPRING
+    SPRING,
+    STONE
 } MaterialType;
 
 typedef struct {
@@ -44,9 +45,12 @@ typedef struct {
     bool building;
 } State;
 
+#define MAX_NODES 72
+#define MAX_LINKS 200
+
 typedef struct {
-    Node nodes[72];
-    Link links[200];
+    Node nodes[MAX_NODES];
+    Link links[MAX_LINKS];
     int node_count;
     int link_count;
     State state;
