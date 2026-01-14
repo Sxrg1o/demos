@@ -22,6 +22,8 @@ int main(void) {
     double current_time = GetTime();
     double accumulator = 0.0;
     int last_node_idx = -1;
+    int selected_node_idx = -1;
+    bool is_holding = false;
 
     while(!WindowShouldClose()) {
         double new_time = GetTime();
@@ -85,10 +87,27 @@ int main(void) {
 
             if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) last_node_idx = -1;
         } else {
+            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                selected_node_idx = -1;
+
+                for(int i = 0; i < world.node_count; i++) {
+                    if(CheckCollisionPointCircle(mouse_pos, world.nodes[i].position, selection_radius)) {
+                        selected_node_idx = i;
+                        is_holding = true;
+                        break;
+                    }
+                }
+
+                if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+                    is_holding = false;
+                    selected_node_idx = -1;
+                }
+            }
+
             accumulator += frame_time;
 
             while(accumulator >= PHYS_DT) {
-                for(int i = 0; i < PHYS_STEPS; i++) update_physics(&world, PHYS_DT);
+                for(int i = 0; i < PHYS_STEPS; i++) update_physics(&world, PHYS_DT, selected_node_idx, mouse_pos);
                 accumulator -= PHYS_DT;
             }
         } 

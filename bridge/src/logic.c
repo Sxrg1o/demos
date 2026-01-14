@@ -40,7 +40,7 @@ void init_materials(BMaterial* material_list) {
     strncpy(material_list[SPRING].name, "Spring", 9);
     material_list[SPRING].color = GRAY;
 
-    material_list[STONE].density = 100.0f;
+    material_list[STONE].density = 50.0f;
     material_list[STONE].stiffness = 0.0f;
     material_list[STONE].tensile_strength = 0.0f;
     material_list[STONE].compression = 0.0f;
