@@ -16,7 +16,7 @@ void update_physics(World* world, float delta_time, int selected_node_idx, Vecto
         world->nodes[i].acceleration = gravity;
         if(i == selected_node_idx) {
             Vector2 pull_force = Vector2Subtract(target_pos, world->nodes[i].position);
-            float strength = 1000.0f;
+            float strength = 500.0f;   // Ajustar esta webada, no mucho que se bugea XDD
             world->nodes[i].acceleration = Vector2Add(world->nodes[i].acceleration, Vector2Scale(pull_force, strength));
         }
         world->nodes[i].prev_position = world->nodes[i].position;
@@ -106,6 +106,42 @@ void update_physics(World* world, float delta_time, int selected_node_idx, Vecto
                 }
                 if(!link->b->fixed) {
                     link->b->position = Vector2Subtract(link->b->position, Vector2Scale(normal, force_b));
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i < world->node_count; i++) {
+        for(int j = i + 1; j < world->node_count; j++) {
+            Node* a = &world->nodes[i];
+            Node* b = &world->nodes[j];
+
+            if(a->fixed && b->fixed) continue;
+
+            Vector2 delta = Vector2Subtract(b->position, a->position);
+            float dist = Vector2Length(delta);
+            float target_dist = a->material->radius + b->material->radius;
+
+            if(dist < target_dist) {                
+                Vector2 normal = Vector2Zero();
+                if(dist > 0.0001f) {
+                    normal = Vector2Scale(delta, 1.0f / dist);
+                } else {
+                    normal = (Vector2){1, 0};
+                }
+
+                float penetration = target_dist - dist;
+                float w_total = a->inv_mass + b->inv_mass;
+                
+                if(w_total == 0.0f) continue;
+
+                if(!a->fixed) {
+                    float move1 = penetration * (a->inv_mass / w_total);
+                    a->position = Vector2Subtract(a->position, Vector2Scale(normal, move1));
+                }
+                if(!a->fixed) {
+                    float move2 = penetration * (b->inv_mass / w_total);
+                    b->position = Vector2Add(b->position, Vector2Scale(normal, move2));
                 }
             }
         }

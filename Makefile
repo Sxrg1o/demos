@@ -1,7 +1,7 @@
 CC = gcc
 ifdef OS
    RM = cmd /c del /Q
-   FixPath = $(subst /,\,$1)
+   EXT = .exe
    
    RAYLIB_PATH = C:/Users/LENOVO/raylib
    
@@ -9,7 +9,7 @@ ifdef OS
    LDFLAGS = -L$(RAYLIB_PATH)/lib -lraylib -lopengl32 -lgdi32 -lwinmm
 else
    RM = rm -f
-   FixPath = $1
+   EXT = 
    CFLAGS = -Wall -g -O2 
    LDFLAGS = -lraylib -lm -pthread -ldl -lrt -lGL -lX11
 endif
@@ -29,7 +29,7 @@ SRCS := $(shell find $(SRC_DIR) -name '*.c')
 
 OBJS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRCS))
 
-TARGET = $(BUILD_DIR)/$(DEMO)
+TARGET = $(BUILD_DIR)/$(DEMO)$(EXT)
 
 .PHONY: all clean run dir_check
 
@@ -52,4 +52,4 @@ dir_check:
 	fi
 
 clean:
-	$(RM) $(subst /,\,$(OBJS)) $(subst /,\,$(TARGET).exe)
+	$(RM) $(OBJS) $(TARGET)

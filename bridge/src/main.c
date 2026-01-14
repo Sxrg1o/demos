@@ -8,7 +8,7 @@
 #define PHYS_STEPS 8
 
 int main(void) {
-    const int mult = 50;
+    const int mult = 100;
     const int screen_width = 16 * mult;
     const int screen_height = 9 * mult;
 
@@ -23,7 +23,6 @@ int main(void) {
     double accumulator = 0.0;
     int last_node_idx = -1;
     int selected_node_idx = -1;
-    bool is_holding = false;
 
     while(!WindowShouldClose()) {
         double new_time = GetTime();
@@ -93,13 +92,11 @@ int main(void) {
                 for(int i = 0; i < world.node_count; i++) {
                     if(CheckCollisionPointCircle(mouse_pos, world.nodes[i].position, selection_radius)) {
                         selected_node_idx = i;
-                        is_holding = true;
                         break;
                     }
                 }
 
                 if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-                    is_holding = false;
                     selected_node_idx = -1;
                 }
             }
