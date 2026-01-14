@@ -20,7 +20,9 @@ void gen_world(World *world, unsigned int seed) {
     for (int y = 0; y < world->height; y++) {
       Cell *c = &world->grid[y * world->width + x];
 
-      c->pheromone_food = 0;
+      c->pheromone_to_food = 0.0f;
+      c->pheromone_to_home = 0.0f;
+      c->pheromone_visited = 0.0f;
       c->ant_id = -1;
       c->type = CELL_EMPTY;
 

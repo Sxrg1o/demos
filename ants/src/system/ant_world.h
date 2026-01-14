@@ -7,6 +7,9 @@
 #include <stdbool.h>
 #define MAX_ANTS 100
 
+#define EVAPORATION_RATE 0.98f
+#define DIFFUSION_RATE 0.1f
+
 typedef enum {
   CELL_EMPTY,
   CELL_RESOURCE,
@@ -16,9 +19,11 @@ typedef enum {
 } CellType;
 
 typedef struct {
-  float pheromone_food;
+  float pheromone_to_food;   // scent to food (red)
+  float pheromone_to_home;   // scent to home (blue)
+  float pheromone_visited;   // scent for exploration
   Resource resource; // if type is CELL_RESOURCE
-  int ant_id;        // if type is CELL_ANT
+  int ant_id;        // if type is CELL_ANT (-1 = none)
   CellType type;
 } Cell;
 

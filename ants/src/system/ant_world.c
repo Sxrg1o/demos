@@ -18,7 +18,12 @@ int world_init(World *w, int width, int height) {
   memset(w->grid, 0, sizeof(Cell) * width * height);
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
-      w->grid[y * width + x].type = CELL_EMPTY;
+      Cell *c = &w->grid[y * width + x];
+      c->type = CELL_EMPTY;
+      c->ant_id = -1;
+      c->pheromone_to_food = 0.0f;
+      c->pheromone_to_home = 0.0f;
+      c->pheromone_visited = 0.0f;
     }
   }
   return 0;
@@ -53,15 +58,20 @@ void world_occupy_cell(World *w, Position p, Cell cell) {
   if (!w || !w->grid || !world_in_bounds(w, p)) {
     return;
   }
-  w->grid[p.y * w->width + p.x].resource = cell.resource;
-  w->grid[p.y * w->width + p.x].ant_id = cell.ant_id;
-  w->grid[p.y * w->width + p.x].type = cell.type;
+  Cell *dest = &w->grid[p.y * w->width + p.x];
+  dest->resource = cell.resource;
+  dest->ant_id = cell.ant_id;
+  dest->type = cell.type;
+  dest->pheromone_to_food = cell.pheromone_to_food;
+  dest->pheromone_to_home = cell.pheromone_to_home;
+  dest->pheromone_visited = cell.pheromone_visited;
 }
 
 void world_vacate_cell(World *w, Position p) {
   if (!w || !w->grid || !world_in_bounds(w, p)) {
     return;
   }
-  w->grid[p.y * w->width + p.x].type = CELL_EMPTY;
-  w->grid[p.y * w->width + p.x].ant_id = 0;
+  Cell *c = &w->grid[p.y * w->width + p.x];
+  c->type = CELL_EMPTY;
+  c->ant_id = -1;
 }

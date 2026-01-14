@@ -22,13 +22,9 @@ bool entity_spawn_ant(World *w, Position p) {
   Ant *ant = &w->ants[id];
 
   ant_init(ant, p, w->nest_pos);
-  Cell cell;
+  Cell cell = w->grid[p.y * w->width + p.x];
   cell.type = CELL_ANT;
   cell.ant_id = id;
-  cell.pheromone_food = 0.0f;
-  cell.resource.type = RESOURCE_DIRT;
-  cell.resource.value = 0;
-  cell.resource.weight = 0;
 
   world_occupy_cell(w, p, cell);
 
@@ -153,7 +149,8 @@ void ant_think(int ant_id, World *w) {
         if (tt == CELL_RESOURCE)
           continue;
 
-        /* enforce: the destination must be adjacent to at least one non-empty cell */
+        /* enforce: the destination must be adjacent to at least one non-empty
+         * cell */
         bool near_non_empty = false;
         for (int dy = -1; dy <= 1 && !near_non_empty; dy++) {
           for (int dx = -1; dx <= 1 && !near_non_empty; dx++) {
@@ -257,7 +254,8 @@ void system_update_ant(int ant_id, World *world) {
       return;
     }
     Cell *tc = &world->grid[target.y * world->width + target.x];
-    /* disallow moving onto resources; allow empty, nest or other ants (climb) */
+    /* disallow moving onto resources; allow empty, nest or other ants (climb)
+     */
     if (tc->type == CELL_RESOURCE) {
       ant_clear_plan(ant);
       return;
@@ -270,7 +268,9 @@ void system_update_ant(int ant_id, World *world) {
     Cell new_cell;
     new_cell.type = CELL_ANT;
     new_cell.ant_id = (ant_id >= 0) ? ant_id : 0;
-    new_cell.pheromone_food = 0.0f;
+    new_cell.pheromone_to_food = 0.0f;
+    new_cell.pheromone_to_home = 0.0f;
+    new_cell.pheromone_visited = 0.0f;
     new_cell.resource = (Resource){0};
     world_occupy_cell(world, target, new_cell);
 
@@ -317,7 +317,9 @@ void system_update_ant(int ant_id, World *world) {
     Cell drop;
     drop.type = CELL_RESOURCE;
     drop.resource = ant->carried_resource;
-    drop.pheromone_food = 0.0f;
+    drop.pheromone_to_food = 0.0f;
+    drop.pheromone_to_home = 0.0f;
+    drop.pheromone_visited = 0.0f;
     drop.ant_id = 0;
     world_occupy_cell(world, target, drop);
 
@@ -334,4 +336,100 @@ void system_update_world(World *w) {
   for (int i = 0; i < w->num_ants; i++) {
     system_update_ant(i, w);
   }
+  
+  /* Pheromone diffusion + evaporation + source injection */
+  int width = w->width;
+  int height = w->height;
+  int n = width * height;
+
+  float *new_food = calloc(n, sizeof(float));
+  float *new_home = calloc(n, sizeof(float));
+  float *new_visited = calloc(n, sizeof(float));
+  if (!new_food || !new_home || !new_visited) {
+    free(new_food);
+    free(new_home);
+    free(new_visited);
+    return;
+  }
+
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      int idx = y * width + x;
+      Cell *c = &w->grid[idx];
+
+      int neigh[8];
+      int nc = 0;
+      for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++) {
+          if (dx == 0 && dy == 0)
+            continue;
+          int nx = x + dx;
+          int ny = y + dy;
+          if (nx < 0 || nx >= width || ny < 0 || ny >= height)
+            continue;
+          neigh[nc++] = ny * width + nx;
+        }
+      }
+
+      float v_food = c->pheromone_to_food;
+      float v_home = c->pheromone_to_home;
+      float v_visited = c->pheromone_visited;
+
+      float d_food = v_food * DIFFUSION_RATE;
+      float d_home = v_home * DIFFUSION_RATE;
+      float d_visited = v_visited * DIFFUSION_RATE;
+
+      float keep_food = v_food - d_food;
+      float keep_home = v_home - d_home;
+      float keep_visited = v_visited - d_visited;
+
+      new_food[idx] += keep_food;
+      new_home[idx] += keep_home;
+      new_visited[idx] += keep_visited;
+
+      if (nc > 0) {
+        float share_food = d_food / nc;
+        float share_home = d_home / nc;
+        float share_visited = d_visited / nc;
+        for (int k = 0; k < nc; k++) {
+          int ni = neigh[k];
+          new_food[ni] += share_food;
+          new_home[ni] += share_home;
+          new_visited[ni] += share_visited;
+        }
+      } else {
+        new_food[idx] += d_food;
+        new_home[idx] += d_home;
+        new_visited[idx] += d_visited;
+      }
+    }
+  }
+
+  /* evaporation */
+  for (int i = 0; i < n; i++) {
+    new_food[i] *= EVAPORATION_RATE;
+    new_home[i] *= EVAPORATION_RATE;
+    new_visited[i] *= EVAPORATION_RATE;
+  }
+
+  for (int i = 0; i < n; i++) {
+    w->grid[i].pheromone_to_food = new_food[i];
+    w->grid[i].pheromone_to_home = new_home[i];
+    w->grid[i].pheromone_visited = new_visited[i];
+  }
+
+  if (world_in_bounds(w, w->nest_pos)) {
+    int ni = w->nest_pos.y * width + w->nest_pos.x;
+    w->grid[ni].pheromone_to_home = 1.0f;
+  }
+  for (int i = 0; i < n; i++) {
+    if (w->grid[i].type == CELL_RESOURCE &&
+        w->grid[i].resource.type == RESOURCE_FOOD) {
+      w->grid[i].pheromone_to_food = 1.0f;
+    }
+  }
+
+  free(new_food);
+  free(new_home);
+  free(new_visited);
 }
