@@ -12,7 +12,7 @@
 #define COLOR_ANT 0x000000FF   // Black
 #define COLOR_NEST 0xFFD700FF  // Gold
 #define COLOR_OTHER 0x808080FF // Grey
-#define CELL_SIZE 8
+#define CELL_SIZE 5
 
 void render_world(const World *w);
 

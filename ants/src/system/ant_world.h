@@ -12,6 +12,7 @@ typedef enum {
   CELL_RESOURCE,
   CELL_ANT,
   CELL_NEST,
+  CELL_OUT_OF_BOUNDS,
 } CellType;
 
 typedef struct {

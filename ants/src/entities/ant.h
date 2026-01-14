@@ -6,15 +6,7 @@
 #include <stdbool.h>
 
 #define PLAN_SIZE 3
-#define ANT_DEFAULT_RADIUS 5
-
-typedef enum {
-  ORIENTATION_NORTH,
-  ORIENTATION_EAST,
-  ORIENTATION_SOUTH,
-  ORIENTATION_WEST,
-} Orientation;
-
+#define ANT_RADIUS 5
 typedef enum {
   ACTION_IDLE,
   ACTION_MOVE,
@@ -30,7 +22,6 @@ typedef struct {
 
 typedef struct {
   Position position;
-  Orientation orientation;
   bool is_carring;
   Resource carried_resource;
   Action plan[PLAN_SIZE];

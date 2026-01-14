@@ -7,7 +7,6 @@ void ant_init(Ant *ant, Position pos, Position nest_pos) {
 
   ant->position = pos;
   ant->nest_position = nest_pos;
-  ant->orientation = ORIENTATION_NORTH; // Default
   ant->is_carring = false;
   ant->carried_resource = (Resource){0};
   ant->plan_length = 0;

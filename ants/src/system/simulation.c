@@ -1,5 +1,6 @@
 #include "simulation.h"
 #include "../entities/ant.h"
+#include "ant_math.h"
 #include "ant_world.h"
 #include <stdlib.h>
 
@@ -101,39 +102,91 @@ void ant_think(int ant_id, World *w) {
 
   Ant *ant = &(w->ants[ant_id]);
   ant_clear_plan(ant);
+
+  /* gather adjacent positions (8-neighborhood) */
+  Position adj[8];
+  bool all_empty = true;
+  int ai = 0;
+  for (int dy = -1; dy <= 1; dy++) {
+    for (int dx = -1; dx <= 1; dx++) {
+      if (dx == 0 && dy == 0)
+        continue;
+      adj[ai++] = (Position){ant->position.x + dx, ant->position.y + dy};
+      if (world_in_bounds(w, adj[ai - 1])) {
+        CellType t = w->grid[adj[ai - 1].y * w->width + adj[ai - 1].x].type;
+        if (t != CELL_EMPTY) {
+          all_empty = false;
+        }
+      }
+    }
+  }
+  if (all_empty) {
+    Action move_down = {
+        .type = ACTION_MOVE,
+        .target = {ant->position.x, ant->position.y + 1},
+        .resource = {0},
+    };
+    ant->plan[0] = move_down;
+    ant->plan_length = 1;
+    return;
+  }
+
   int added = 0;
-  for (int i = 0; i < PLAN_SIZE && added < PLAN_SIZE; i++) {
+  while (added < PLAN_SIZE) {
     Action a;
     a.type = ACTION_IDLE;
     a.target = ant->position;
     a.resource = (Resource){0};
 
-    int choice = rand() % 4;
+    int choice = rand() % 4; // 0:IDLE,1:MOVE,2:PICKUP,3:DROP
 
-    if (choice == 1) {
-      int attempts = 0;
-      bool found = false;
-      while (attempts < 16 && !found) {
-        int dx = (rand() % (2 * ANT_DEFAULT_RADIUS + 1)) - ANT_DEFAULT_RADIUS;
-        int dy = (rand() % (2 * ANT_DEFAULT_RADIUS + 1)) - ANT_DEFAULT_RADIUS;
-        Position t = {ant->position.x + dx, ant->position.y + dy};
-        if (world_in_bounds(w, t) && !world_is_occupied(w, t)) {
-          a.type = ACTION_MOVE;
-          a.target = t;
-          found = true;
+    if (choice == 1) { // MOVE
+      Position candidates[8];
+      int cand = 0;
+      for (int k = 0; k < 8; k++) {
+        Position t = adj[k];
+        if (!world_in_bounds(w, t))
+          continue;
+        CellType tt = w->grid[t.y * w->width + t.x].type;
+        /* allow move onto empty, nest or other ants (can climb on ants)
+           but not onto resources */
+        if (tt == CELL_RESOURCE)
+          continue;
+
+        /* enforce: the destination must be adjacent to at least one non-empty cell */
+        bool near_non_empty = false;
+        for (int dy = -1; dy <= 1 && !near_non_empty; dy++) {
+          for (int dx = -1; dx <= 1 && !near_non_empty; dx++) {
+            if (dx == 0 && dy == 0)
+              continue;
+            Position n = {t.x + dx, t.y + dy};
+            if (!world_in_bounds(w, n))
+              continue;
+            CellType nt = w->grid[n.y * w->width + n.x].type;
+            if (nt != CELL_EMPTY) {
+              near_non_empty = true;
+            }
+          }
         }
-        attempts++;
+        if (near_non_empty) {
+          candidates[cand++] = t;
+        }
       }
-      if (!found) {
+      if (cand > 0) {
+        a.type = ACTION_MOVE;
+        a.target = candidates[rand() % cand];
+      } else {
         a.type = ACTION_IDLE;
       }
-    } else if (choice == 2) {
-      Position candidates[256];
-      int cand = 0;
-      int r = ANT_DEFAULT_RADIUS;
-      for (int dy = -r; dy <= r && cand < 256; dy++) {
-        for (int dx = -r; dx <= r && cand < 256; dx++) {
-          Position t = {ant->position.x + dx, ant->position.y + dy};
+
+    } else if (choice == 2) { // PICKUP (only adjacent)
+      if (ant->is_carring) {
+        a.type = ACTION_IDLE;
+      } else {
+        Position candidates[8];
+        int cand = 0;
+        for (int k = 0; k < 8; k++) {
+          Position t = adj[k];
           if (!world_in_bounds(w, t))
             continue;
           Cell *c = &w->grid[t.y * w->width + t.x];
@@ -141,37 +194,36 @@ void ant_think(int ant_id, World *w) {
             candidates[cand++] = t;
           }
         }
-      }
-      if (cand > 0 && !ant->is_carring) {
-        Position t = candidates[rand() % cand];
-        a.type = ACTION_PICKUP;
-        a.target = t;
-      } else {
-        a.type = ACTION_IDLE;
-      }
-    } else if (choice == 3) {
-      if (ant->is_carring) {
-        int attempts = 0;
-        bool found = false;
-        while (attempts < 16 && !found) {
-          int dx = (rand() % (2 * ANT_DEFAULT_RADIUS + 1)) - ANT_DEFAULT_RADIUS;
-          int dy = (rand() % (2 * ANT_DEFAULT_RADIUS + 1)) - ANT_DEFAULT_RADIUS;
-          Position t = {ant->position.x + dx, ant->position.y + dy};
-          if (world_in_bounds(w, t)) {
-            Cell *c = &w->grid[t.y * w->width + t.x];
-            if (c->type == CELL_EMPTY) {
-              a.type = ACTION_DROP;
-              a.target = t;
-              a.resource = ant->carried_resource;
-              found = true;
-            }
-          }
-          attempts++;
-        }
-        if (!found)
+        if (cand > 0) {
+          a.type = ACTION_PICKUP;
+          a.target = candidates[rand() % cand];
+        } else {
           a.type = ACTION_IDLE;
-      } else {
+        }
+      }
+
+    } else if (choice == 3) { // DROP (only adjacent)
+      if (!ant->is_carring) {
         a.type = ACTION_IDLE;
+      } else {
+        Position candidates[8];
+        int cand = 0;
+        for (int k = 0; k < 8; k++) {
+          Position t = adj[k];
+          if (!world_in_bounds(w, t))
+            continue;
+          Cell *c = &w->grid[t.y * w->width + t.x];
+          if (c->type == CELL_EMPTY) {
+            candidates[cand++] = t;
+          }
+        }
+        if (cand > 0) {
+          a.type = ACTION_DROP;
+          a.target = candidates[rand() % cand];
+          a.resource = ant->carried_resource;
+        } else {
+          a.type = ACTION_IDLE;
+        }
       }
     }
 
@@ -200,17 +252,21 @@ void system_update_ant(int ant_id, World *world) {
 
   case ACTION_MOVE: {
     Position target = ant_action.target;
-    if (!world_in_bounds(world, target) || world_is_occupied(world, target)) {
+    if (!world_in_bounds(world, target)) {
+      ant_clear_plan(ant);
+      return;
+    }
+    Cell *tc = &world->grid[target.y * world->width + target.x];
+    /* disallow moving onto resources; allow empty, nest or other ants (climb) */
+    if (tc->type == CELL_RESOURCE) {
       ant_clear_plan(ant);
       return;
     }
 
-    /* vacate old cell */
     if (world_in_bounds(world, ant->position)) {
       world_vacate_cell(world, ant->position);
     }
 
-    /* occupy new cell as ant */
     Cell new_cell;
     new_cell.type = CELL_ANT;
     new_cell.ant_id = (ant_id >= 0) ? ant_id : 0;
@@ -272,8 +328,7 @@ void system_update_ant(int ant_id, World *world) {
   }
 }
 
-// Update helpers
-void update_world(World *w) {
+void system_update_world(World *w) {
   if (!w)
     return;
   for (int i = 0; i < w->num_ants; i++) {

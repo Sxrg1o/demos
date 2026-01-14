@@ -28,7 +28,7 @@ int main() {
     BeginDrawing();
     render_world(&world);
     EndDrawing();
-    update_world(&world);
+    system_update_world(&world);
   }
 
   CloseWindow();

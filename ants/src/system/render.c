@@ -26,6 +26,9 @@ void render_world(const World *w) {
           cell_color = GetColor(COLOR_FOOD);
         }
         break;
+      case CELL_OUT_OF_BOUNDS:
+        cell_color = DARKGRAY;
+        break;
       }
       DrawRectangle(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,
                     cell_color);
