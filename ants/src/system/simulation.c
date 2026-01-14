@@ -2,6 +2,7 @@
 #include "../entities/ant.h"
 #include "ant_math.h"
 #include "ant_world.h"
+#include <math.h>
 #include <stdlib.h>
 
 // Entities Management
@@ -99,134 +100,265 @@ void ant_think(int ant_id, World *w) {
   Ant *ant = &(w->ants[ant_id]);
   ant_clear_plan(ant);
 
-  /* gather adjacent positions (8-neighborhood) */
-  Position adj[8];
-  bool all_empty = true;
-  int ai = 0;
-  for (int dy = -1; dy <= 1; dy++) {
-    for (int dx = -1; dx <= 1; dx++) {
-      if (dx == 0 && dy == 0)
-        continue;
-      adj[ai++] = (Position){ant->position.x + dx, ant->position.y + dy};
-      if (world_in_bounds(w, adj[ai - 1])) {
-        CellType t = w->grid[adj[ai - 1].y * w->width + adj[ai - 1].x].type;
-        if (t != CELL_EMPTY) {
-          all_empty = false;
+  Action next_action;
+  next_action.type = ACTION_IDLE;
+  next_action.target = ant->position;
+  next_action.resource = (Resource){0};
+
+  // State Machine / Hierarchical AI
+
+  // Update state based on reality check
+  if (!ant->is_carring) {
+    if (ant->state == STATE_RETURNING || ant->state == STATE_CLEARING) {
+      ant->state = STATE_SCOUTING;
+    }
+  } else {
+    if (ant->carried_resource.type == RESOURCE_FOOD &&
+        ant->state != STATE_RETURNING) {
+      ant->state = STATE_RETURNING;
+    }
+    if (ant->carried_resource.type == RESOURCE_DIRT &&
+        ant->state != STATE_CLEARING) {
+      ant->state = STATE_CLEARING;
+      ant->origin_pos = ant->position;
+    }
+  }
+
+  switch (ant->state) {
+  case STATE_SCOUTING: {
+    float min_score = 1000000.0f;
+    Position candidates[8];
+    int cand_count = 0;
+    bool smells_food = false;
+
+    for (int dy = -1; dy <= 1; dy++) {
+      for (int dx = -1; dx <= 1; dx++) {
+        if (dx == 0 && dy == 0)
+          continue;
+        Position p = {ant->position.x + dx, ant->position.y + dy};
+        if (!world_in_bounds(w, p))
+          continue;
+        Cell *c = &w->grid[p.y * w->width + p.x];
+
+        if (c->pheromone_to_food > 0.1f)
+          smells_food = true;
+
+        if (c->type != CELL_RESOURCE) {
+          float score =
+              (c->pheromone_visited * 5.0f) + (c->pheromone_to_home * 1.0f);
+          score += ((rand() % 100) / 100.0f) * 0.1f;
+          if (score < min_score) {
+            min_score = score;
+            cand_count = 0;
+            candidates[cand_count++] = p;
+          } else if (score == min_score) {
+            candidates[cand_count++] = p;
+          }
         }
       }
     }
-  }
-  if (all_empty) {
-    Action move_down = {
-        .type = ACTION_MOVE,
-        .target = {ant->position.x, ant->position.y + 1},
-        .resource = {0},
-    };
-    ant->plan[0] = move_down;
-    ant->plan_length = 1;
-    return;
+    if (smells_food) {
+      ant->state = STATE_HARVESTING;
+    } else if (cand_count > 0) {
+      next_action.type = ACTION_MOVE;
+      next_action.target = candidates[rand() % cand_count];
+    }
+    break;
   }
 
-  int added = 0;
-  while (added < PLAN_SIZE) {
-    Action a;
-    a.type = ACTION_IDLE;
-    a.target = ant->position;
-    a.resource = (Resource){0};
+  case STATE_HARVESTING: {
+    float max_food = -1.0f;
+    Position candidates[8];
+    int cand_count = 0;
+    Position dirt_blocker = {-1, -1};
+    float dirt_phero = -1.0f;
 
-    int choice = rand() % 4; // 0:IDLE,1:MOVE,2:PICKUP,3:DROP
-
-    if (choice == 1) { // MOVE
-      Position candidates[8];
-      int cand = 0;
-      for (int k = 0; k < 8; k++) {
-        Position t = adj[k];
-        if (!world_in_bounds(w, t))
+    for (int dy = -1; dy <= 1; dy++) {
+      for (int dx = -1; dx <= 1; dx++) {
+        if (dx == 0 && dy == 0)
           continue;
-        CellType tt = w->grid[t.y * w->width + t.x].type;
-        /* allow move onto empty, nest or other ants (can climb on ants)
-           but not onto resources */
-        if (tt == CELL_RESOURCE)
+        Position p = {ant->position.x + dx, ant->position.y + dy};
+        if (!world_in_bounds(w, p))
           continue;
+        Cell *c = &w->grid[p.y * w->width + p.x];
 
-        /* enforce: the destination must be adjacent to at least one non-empty
-         * cell */
-        bool near_non_empty = false;
-        for (int dy = -1; dy <= 1 && !near_non_empty; dy++) {
-          for (int dx = -1; dx <= 1 && !near_non_empty; dx++) {
-            if (dx == 0 && dy == 0)
-              continue;
-            Position n = {t.x + dx, t.y + dy};
-            if (!world_in_bounds(w, n))
-              continue;
-            CellType nt = w->grid[n.y * w->width + n.x].type;
-            if (nt != CELL_EMPTY) {
-              near_non_empty = true;
-            }
-          }
+        if (c->type == CELL_RESOURCE && c->resource.type == RESOURCE_FOOD) {
+          next_action.type = ACTION_PICKUP;
+          next_action.target = p;
+          ant->state = STATE_RETURNING;
+          ant->plan[0] = next_action;
+          ant->plan_length = 1;
+          return;
         }
-        if (near_non_empty) {
-          candidates[cand++] = t;
-        }
-      }
-      if (cand > 0) {
-        a.type = ACTION_MOVE;
-        a.target = candidates[rand() % cand];
-      } else {
-        a.type = ACTION_IDLE;
-      }
 
-    } else if (choice == 2) { // PICKUP (only adjacent)
-      if (ant->is_carring) {
-        a.type = ACTION_IDLE;
-      } else {
-        Position candidates[8];
-        int cand = 0;
-        for (int k = 0; k < 8; k++) {
-          Position t = adj[k];
-          if (!world_in_bounds(w, t))
-            continue;
-          Cell *c = &w->grid[t.y * w->width + t.x];
-          if (c->type == CELL_RESOURCE) {
-            candidates[cand++] = t;
+        if (c->pheromone_to_food > max_food) {
+          max_food = c->pheromone_to_food;
+          cand_count = 0;
+          if (c->type != CELL_RESOURCE)
+            candidates[cand_count++] = p;
+          else if (c->resource.type == RESOURCE_DIRT) {
+            dirt_blocker = p;
+            dirt_phero = c->pheromone_to_food;
           }
-        }
-        if (cand > 0) {
-          a.type = ACTION_PICKUP;
-          a.target = candidates[rand() % cand];
-        } else {
-          a.type = ACTION_IDLE;
-        }
-      }
-
-    } else if (choice == 3) { // DROP (only adjacent)
-      if (!ant->is_carring) {
-        a.type = ACTION_IDLE;
-      } else {
-        Position candidates[8];
-        int cand = 0;
-        for (int k = 0; k < 8; k++) {
-          Position t = adj[k];
-          if (!world_in_bounds(w, t))
-            continue;
-          Cell *c = &w->grid[t.y * w->width + t.x];
-          if (c->type == CELL_EMPTY) {
-            candidates[cand++] = t;
-          }
-        }
-        if (cand > 0) {
-          a.type = ACTION_DROP;
-          a.target = candidates[rand() % cand];
-          a.resource = ant->carried_resource;
-        } else {
-          a.type = ACTION_IDLE;
+        } else if (c->pheromone_to_food == max_food) {
+          if (c->type != CELL_RESOURCE)
+            candidates[cand_count++] = p;
         }
       }
     }
 
-    ant->plan[added++] = a;
-    ant->plan_length = added;
+    bool should_dig = false;
+    if (dirt_blocker.x != -1) {
+      if (cand_count == 0 || dirt_phero > max_food)
+        should_dig = true;
+    }
+
+    if (should_dig) {
+      next_action.type = ACTION_PICKUP;
+      next_action.target = dirt_blocker;
+      ant->state = STATE_CLEARING;
+      ant->origin_pos = ant->position;
+    } else if (cand_count > 0) {
+      next_action.type = ACTION_MOVE;
+      next_action.target = candidates[rand() % cand_count];
+    } else {
+      ant->state = STATE_SCOUTING;
+    }
+    break;
   }
+
+  case STATE_RETURNING: {
+    int d_nest = dist_sq(ant->position, w->nest_pos);
+    if (d_nest <= 2) {
+      next_action.type = ACTION_DROP;
+      next_action.target = w->nest_pos;
+      next_action.resource = ant->carried_resource;
+      ant->state = STATE_SCOUTING;
+      ant->plan[0] = next_action;
+      ant->plan_length = 1;
+      return;
+    }
+    if (d_nest < 6 * 6 && d_nest > 2 * 2) {
+      Position drops[8];
+      int drop_cnt = 0;
+      for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++) {
+          if (dx == 0 && dy == 0)
+            continue;
+          Position p = {ant->position.x + dx, ant->position.y + dy};
+          if (world_in_bounds(w, p) &&
+              w->grid[p.y * w->width + p.x].type == CELL_EMPTY) {
+            drops[drop_cnt++] = p;
+          }
+        }
+      }
+      if (drop_cnt > 0) {
+        next_action.type = ACTION_DROP;
+        next_action.target = drops[rand() % drop_cnt];
+        next_action.resource = ant->carried_resource;
+        ant->state = STATE_SCOUTING;
+        ant->plan[0] = next_action;
+        ant->plan_length = 1;
+        return;
+      }
+    }
+
+    float max_home = -1.0f;
+    Position candidates[8];
+    int cand_count = 0;
+    for (int dy = -1; dy <= 1; dy++) {
+      for (int dx = -1; dx <= 1; dx++) {
+        if (dx == 0 && dy == 0)
+          continue;
+        Position p = {ant->position.x + dx, ant->position.y + dy};
+        if (!world_in_bounds(w, p))
+          continue;
+        Cell *c = &w->grid[p.y * w->width + p.x];
+        if (c->type != CELL_RESOURCE) {
+          if (c->pheromone_to_home > max_home) {
+            max_home = c->pheromone_to_home;
+            cand_count = 0;
+            candidates[cand_count++] = p;
+          } else if (c->pheromone_to_home == max_home) {
+            candidates[cand_count++] = p;
+          }
+        }
+      }
+    }
+    if (cand_count > 0) {
+      next_action.type = ACTION_MOVE;
+      next_action.target = candidates[rand() % cand_count];
+    }
+    break;
+  }
+
+  case STATE_CLEARING: {
+    int d_origin = dist_sq(ant->position, ant->origin_pos);
+    if (d_origin > 5 * 5) {
+      float min_phero = 1000.0f;
+      Position drops[8];
+      int drop_cnt = 0;
+      for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++) {
+          if (dx == 0 && dy == 0)
+            continue;
+          Position p = {ant->position.x + dx, ant->position.y + dy};
+          if (world_in_bounds(w, p) &&
+              w->grid[p.y * w->width + p.x].type == CELL_EMPTY) {
+            float score = w->grid[p.y * w->width + p.x].pheromone_to_food +
+                          w->grid[p.y * w->width + p.x].pheromone_to_home;
+            if (score < min_phero) {
+              min_phero = score;
+              drop_cnt = 0;
+              drops[drop_cnt++] = p;
+            } else if (score == min_phero)
+              drops[drop_cnt++] = p;
+          }
+        }
+      }
+      if (drop_cnt > 0) {
+        next_action.type = ACTION_DROP;
+        next_action.target = drops[rand() % drop_cnt];
+        next_action.resource = ant->carried_resource;
+        ant->state = STATE_HARVESTING;
+        ant->plan[0] = next_action;
+        ant->plan_length = 1;
+        return;
+      }
+    }
+
+    float min_score = 100000.0f;
+    Position candidates[8];
+    int cand_count = 0;
+    for (int dy = -1; dy <= 1; dy++) {
+      for (int dx = -1; dx <= 1; dx++) {
+        if (dx == 0 && dy == 0)
+          continue;
+        Position p = {ant->position.x + dx, ant->position.y + dy};
+        if (!world_in_bounds(w, p))
+          continue;
+        Cell *c = &w->grid[p.y * w->width + p.x];
+        if (c->type != CELL_RESOURCE) {
+          float score = c->pheromone_to_food + c->pheromone_to_home;
+          if (score < min_score) {
+            min_score = score;
+            cand_count = 0;
+            candidates[cand_count++] = p;
+          } else if (score == min_score)
+            candidates[cand_count++] = p;
+        }
+      }
+    }
+    if (cand_count > 0) {
+      next_action.type = ACTION_MOVE;
+      next_action.target = candidates[rand() % cand_count];
+    }
+    break;
+  }
+  }
+
+  ant->plan[0] = next_action;
+  ant->plan_length = 1;
 }
 
 // Simulation
@@ -262,15 +394,37 @@ void system_update_ant(int ant_id, World *world) {
     }
 
     if (world_in_bounds(world, ant->position)) {
-      world_vacate_cell(world, ant->position);
+      // If leaving nest, restore nest type
+      if (ant->position.x == world->nest_pos.x &&
+          ant->position.y == world->nest_pos.y) {
+        Cell *curr =
+            &world->grid[ant->position.y * world->width + ant->position.x];
+        curr->type = CELL_NEST;
+        curr->ant_id = -1;
+      } else {
+        world_vacate_cell(world, ant->position);
+      }
     }
 
     Cell new_cell;
     new_cell.type = CELL_ANT;
     new_cell.ant_id = (ant_id >= 0) ? ant_id : 0;
-    new_cell.pheromone_to_food = 0.0f;
-    new_cell.pheromone_to_home = 0.0f;
-    new_cell.pheromone_visited = 0.0f;
+
+    // Preserve existing pheromones from target cell
+    new_cell.pheromone_to_food = tc->pheromone_to_food;
+    new_cell.pheromone_to_home = tc->pheromone_to_home;
+    new_cell.pheromone_visited = tc->pheromone_visited;
+
+    // Deposit trails
+    if (ant->is_carring && ant->carried_resource.type == RESOURCE_FOOD) {
+      if (new_cell.pheromone_to_food < 1.0f)
+        new_cell.pheromone_to_food = 1.0f;
+    }
+
+    // Deposit exploration trail
+    if (new_cell.pheromone_visited < 1.0f)
+      new_cell.pheromone_visited = 1.0f;
+
     new_cell.resource = (Resource){0};
     world_occupy_cell(world, target, new_cell);
 
@@ -295,7 +449,7 @@ void system_update_ant(int ant_id, World *world) {
     ant->is_carring = true;
     ant->carried_resource = c->resource;
 
-    /* remove resource from world */
+    /* remove resource from world, preserving pheromones */
     c->type = CELL_EMPTY;
     c->resource = (Resource){0};
     break;
@@ -308,7 +462,18 @@ void system_update_ant(int ant_id, World *world) {
       return;
     }
 
+    // Drop logic
     Cell *c = &world->grid[target.y * world->width + target.x];
+
+    bool is_nest =
+        (target.x == world->nest_pos.x && target.y == world->nest_pos.y);
+    if (c->type == CELL_NEST || is_nest) {
+      // Consume
+      ant->is_carring = false;
+      ant->carried_resource = (Resource){0};
+      return;
+    }
+
     if (c->type != CELL_EMPTY) {
       ant_clear_plan(ant);
       return;
@@ -317,10 +482,39 @@ void system_update_ant(int ant_id, World *world) {
     Cell drop;
     drop.type = CELL_RESOURCE;
     drop.resource = ant->carried_resource;
-    drop.pheromone_to_food = 0.0f;
-    drop.pheromone_to_home = 0.0f;
-    drop.pheromone_visited = 0.0f;
-    drop.ant_id = 0;
+    // If this is food dropped near the nest, convert it to a reservoir.
+    // The radius grows slowly with existing reservoir mass so deposits
+    // start near the nest edge and expand as the reserve grows.
+    if (drop.resource.type == RESOURCE_FOOD) {
+      int total_mass = 0;
+      int area = world->width * world->height;
+      for (int ii = 0; ii < area; ii++) {
+        Cell *rc = &world->grid[ii];
+        if (rc->type == CELL_RESOURCE &&
+            rc->resource.type == RESOURCE_RESERVOIR) {
+          total_mass += rc->resource.value;
+        }
+      }
+
+      // radius = 2 + sqrt(total_mass / 20). Keeps start near 2 and grows slowly
+      int reservoir_radius = 2 + (int)sqrtf((float)total_mass / 20.0f);
+      int maxr =
+          (world->width < world->height ? world->width : world->height) / 2 - 1;
+      if (reservoir_radius < 2)
+        reservoir_radius = 2;
+      if (reservoir_radius > maxr)
+        reservoir_radius = maxr;
+
+      if (dist_sq(target, world->nest_pos) <=
+          reservoir_radius * reservoir_radius) {
+        drop.resource.type = RESOURCE_RESERVOIR;
+      }
+    }
+    // Preserve pheromones
+    drop.pheromone_to_food = c->pheromone_to_food;
+    drop.pheromone_to_home = c->pheromone_to_home;
+    drop.pheromone_visited = c->pheromone_visited;
+    drop.ant_id = -1;
     world_occupy_cell(world, target, drop);
 
     ant->is_carring = false;
@@ -336,7 +530,7 @@ void system_update_world(World *w) {
   for (int i = 0; i < w->num_ants; i++) {
     system_update_ant(i, w);
   }
-  
+
   /* Pheromone diffusion + evaporation + source injection */
   int width = w->width;
   int height = w->height;

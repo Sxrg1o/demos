@@ -32,3 +32,9 @@ float noise2d(float x, float y, int seed) {
 
   return lerp(nx0, nx1, sy);
 }
+
+float dist_sq(Position p1, Position p2) {
+  int dx = p1.x - p2.x;
+  int dy = p1.y - p2.y;
+  return (float)(dx * dx + dy * dy);
+}
