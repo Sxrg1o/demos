@@ -6,10 +6,11 @@ void gen_world(World *world, unsigned int seed) {
   srand(seed);
   float surface_base = world->height * 0.3f;
   float surface_amp = world->height * 0.1f;
-  float surface_freq = 0.05f;
-  float cave_freq = 0.1f;
-  float cave_threshold = 0.65f;
-  int num_deposits = 5 + (rand() % 5);
+  float surface_freq = 0.1f;
+  float cave_freq = 0.15f;
+  float cave_threshold = 0.6f;
+  int num_deposits =
+      1e-3 * world->height * world->width * (1 + 0.1 * (rand() % 2) - 0.5);
 
   for (int x = 0; x < world->width; x++) {
     float n_surf = noise2d(x * surface_freq, 0.0f, seed);
@@ -19,7 +20,6 @@ void gen_world(World *world, unsigned int seed) {
       Cell *c = &world->grid[y * world->width + x];
 
       c->pheromone_food = 0;
-      c->pheromone_home = 0;
       c->ant_id = -1;
       c->type = CELL_EMPTY;
 
@@ -89,6 +89,17 @@ void gen_world(World *world, unsigned int seed) {
               (Resource){.type = RESOURCE_DIRT, .value = 0, .weight = 10};
         }
       }
+    }
+  }
+
+  int dy = 1;
+  for (int dx = -nest_radius; dx <= nest_radius; dx++) {
+    int px = nest_x + dx;
+    int py = nest_y + dy;
+    if (px >= 0 && px < world->width && py >= 0 && py < world->height) {
+      world->grid[py * world->width + px].type = CELL_RESOURCE;
+      world->grid[py * world->width + px].resource =
+          (Resource){.type = RESOURCE_DIRT, .value = 0, .weight = 10};
     }
   }
 

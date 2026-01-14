@@ -23,5 +23,6 @@ int main() {
   }
 
   CloseWindow();
+  world_free(&world);
   return 0;
 }

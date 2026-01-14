@@ -15,7 +15,6 @@ typedef enum {
 } CellType;
 
 typedef struct {
-  float pheromone_home;
   float pheromone_food;
   Resource resource; // if type is CELL_RESOURCE
   int ant_id;        // if type is CELL_ANT
