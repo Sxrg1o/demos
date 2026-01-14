@@ -1,4 +1,5 @@
 #include "generation.h"
+#include "ant_math.h"
 #include "ant_world.h"
 #include <stdlib.h>
 
@@ -102,6 +103,7 @@ void gen_world(World *world, unsigned int seed) {
           (Resource){.type = RESOURCE_DIRT, .value = 0, .weight = 10};
     }
   }
-
+  world->nest_pos = (Position){.x = nest_x, .y = nest_y * world->width};
   world->grid[nest_y * world->width + nest_x].type = CELL_NEST;
+  world->nest_pos = (Position){nest_x, nest_y};
 }

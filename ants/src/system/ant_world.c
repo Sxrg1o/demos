@@ -10,6 +10,7 @@ int world_init(World *w, int width, int height) {
   w->width = width;
   w->height = height;
   w->num_ants = 0;
+  w->next_ant_idx = 0;
   w->grid = malloc(sizeof(Cell) * width * height);
   if (!w->grid) {
     return -1;

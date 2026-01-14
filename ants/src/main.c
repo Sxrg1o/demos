@@ -1,6 +1,7 @@
 #include "system/ant_world.h"
 #include "system/generation.h"
 #include "system/render.h"
+#include "system/simulation.h"
 #include <raylib.h>
 #include <time.h>
 
@@ -17,9 +18,17 @@ int main() {
   SetTargetFPS(60);
 
   while (!WindowShouldClose()) {
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+      Vector2 m = GetMousePosition();
+      int gx = (int)(m.x / CELL_SIZE);
+      int gy = (int)(m.y / CELL_SIZE);
+      entity_spawn_ant(&world, (Position){gx, gy});
+    }
+
     BeginDrawing();
     render_world(&world);
     EndDrawing();
+    update_world(&world);
   }
 
   CloseWindow();

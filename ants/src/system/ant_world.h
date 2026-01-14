@@ -27,6 +27,8 @@ typedef struct {
   Cell *grid;
   Ant ants[MAX_ANTS];
   int num_ants;
+  Position nest_pos;
+  int next_ant_idx;
 } World;
 
 int world_init(World *w, int width, int height);

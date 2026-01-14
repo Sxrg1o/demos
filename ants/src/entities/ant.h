@@ -36,10 +36,15 @@ typedef struct {
   Action plan[PLAN_SIZE];
   int plan_length;
   int plan_idx;
+  Position nest_position;
 } Ant;
 
 // Lifecycle
-void ant_init(Ant *ant, Position pos);
+void ant_init(Ant *ant, Position pos, Position nest_pos);
 void ant_free(Ant *ant);
+
+// Plan
+bool ant_next_action(Ant *ant, Action *out_action);
+void ant_clear_plan(Ant *ant);
 
 #endif // ANT_H
