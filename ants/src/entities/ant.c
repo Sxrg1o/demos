@@ -12,6 +12,10 @@ void ant_init(Ant *ant, Position pos, Position nest_pos) {
   ant->plan_length = 0;
   ant->plan_idx = 0;
   memset(ant->plan, 0, sizeof(ant->plan));
+  
+  ant->state = STATE_SCOUTING;
+  ant->origin_pos = (Position){0, 0};
+  ant->frustration = 0;
 }
 
 void ant_free(Ant *ant) {

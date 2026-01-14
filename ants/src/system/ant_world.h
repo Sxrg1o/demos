@@ -7,8 +7,8 @@
 #include <stdbool.h>
 #define MAX_ANTS 100
 
-#define EVAPORATION_RATE 0.98f
-#define DIFFUSION_RATE 0.1f
+#define EVAPORATION_RATE 0.8f
+#define DIFFUSION_RATE 0.2f
 
 typedef enum {
   CELL_EMPTY,

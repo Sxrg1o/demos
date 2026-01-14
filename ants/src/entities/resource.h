@@ -6,6 +6,7 @@
 typedef enum {
   RESOURCE_DIRT,
   RESOURCE_FOOD,
+  RESOURCE_RESERVOIR
 } ResourceType;
 
 typedef struct {
