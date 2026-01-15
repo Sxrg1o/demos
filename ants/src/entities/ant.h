@@ -36,6 +36,7 @@ typedef struct {
   int plan_length;
   int plan_idx;
   Position nest_position;
+  int id;
   
   // Intelligence
   AntState state;
@@ -44,7 +45,7 @@ typedef struct {
 } Ant;
 
 // Lifecycle
-void ant_init(Ant *ant, Position pos, Position nest_pos);
+void ant_init(Ant *ant, int ant_id, Position pos, Position nest_pos);
 void ant_free(Ant *ant);
 
 // Plan

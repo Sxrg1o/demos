@@ -9,6 +9,15 @@
 
 #define EVAPORATION_RATE 0.8f
 #define DIFFUSION_RATE 0.2f
+#define NEST_INITIAL_RADIUS 3
+
+typedef struct {
+  Position position;
+  int radius;
+  int stored_food;
+  Ant ants[MAX_ANTS];
+  int num_ants;
+} AntNest;
 
 typedef enum {
   CELL_EMPTY,
@@ -19,11 +28,11 @@ typedef enum {
 } CellType;
 
 typedef struct {
-  float pheromone_to_food;   // scent to food (red)
-  float pheromone_to_home;   // scent to home (blue)
-  float pheromone_visited;   // scent for exploration
-  Resource resource; // if type is CELL_RESOURCE
-  int ant_id;        // if type is CELL_ANT (-1 = none)
+  float pheromone_to_food; // scent to food (red)
+  float pheromone_to_home; // scent to home (blue)
+  float pheromone_visited; // scent for exploration
+  Resource resource;       // if type is CELL_RESOURCE
+  int ant_id;              // if type is CELL_ANT (-1 = none)
   CellType type;
 } Cell;
 
@@ -31,10 +40,7 @@ typedef struct {
   int width;
   int height;
   Cell *grid;
-  Ant ants[MAX_ANTS];
-  int num_ants;
-  Position nest_pos;
-  int next_ant_idx;
+  AntNest nest;
 } World;
 
 int world_init(World *w, int width, int height);
@@ -44,4 +50,7 @@ bool world_is_occupied(const World *w, Position p);
 void world_occupy_cell(World *w, Position p, Cell cell);
 void world_vacate_cell(World *w, Position p);
 
+
+void nest_update_radius(AntNest *nest);
+void nest_set_food(AntNest *nest, int amount);
 #endif // ANT_WORLD_H
