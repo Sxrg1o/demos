@@ -5,14 +5,15 @@
 #include "resource.h"
 #include <stdbool.h>
 
-#define PLAN_SIZE 8
-#define ANT_RADIUS 16
+#define PLAN_SIZE 10
+#define ANT_RADIUS 10
 
 typedef enum {
   STATE_SCOUTING,   // Exploring (Looking for food)
   STATE_HARVESTING, // Found trail, going to food
   STATE_RETURNING,  // Carrying food, going to nest
-  STATE_CLEARING    // Carrying dirt, clearing path
+  STATE_CLEARING,   // Carrying dirt, clearing path
+  STATE_SEARCHING_HOME // Lost ant with food
 } AntState;
 
 typedef enum {
