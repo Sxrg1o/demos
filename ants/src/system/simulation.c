@@ -2,8 +2,8 @@
 #include "../entities/ant.h"
 #include "ant_math.h"
 #include "ant_world.h"
-#include <stdlib.h>
 #include <math.h>
+#include <stdlib.h>
 
 // Entities Management
 bool entity_spawn_ant(World *w, Position p) {
@@ -131,10 +131,10 @@ void ant_think(int ant_id, World *w) {
 
     if (food_found) {
       ant->state = STATE_HARVESTING;
-      // We don't plan yet, next tick will handle HARVESTING logic towards this food
-      // or we can just fall through or return.
-      // Let's return to let state machine cycle.
-      return; 
+      // We don't plan yet, next tick will handle HARVESTING logic towards this
+      // food or we can just fall through or return. Let's return to let state
+      // machine cycle.
+      return;
     }
 
     // 1. Movement: Desire = Repulsion(Nest) + Attraction(Unknown)
@@ -172,10 +172,10 @@ void ant_think(int ant_id, World *w) {
     v_desire = AntVector_normalize(v_desire);
 
     // Direction to Target
-    int tx = ant->position.x +
-             (int)(v_desire.x + (v_desire.x > 0 ? 0.5f : -0.5f));
-    int ty = ant->position.y +
-             (int)(v_desire.y + (v_desire.y > 0 ? 0.5f : -0.5f));
+    int tx =
+        ant->position.x + (int)(v_desire.x + (v_desire.x > 0 ? 0.5f : -0.5f));
+    int ty =
+        ant->position.y + (int)(v_desire.y + (v_desire.y > 0 ? 0.5f : -0.5f));
     Position target = {tx, ty};
 
     // Case C: Random Initiative (Excavation)
@@ -229,97 +229,101 @@ void ant_think(int ant_id, World *w) {
 
     // First check immediate neighbors for quick grab
     for (int dy = -1; dy <= 1; dy++) {
-       for (int dx = -1; dx <= 1; dx++) {
-          if(dx==0 && dy ==0) continue;
-          Position p = {ant->position.x + dx, ant->position.y + dy};
-          if(world_in_bounds(w, p)) {
-             Cell *c = &w->grid[p.y * w->width + p.x];
-             if(c->type == CELL_RESOURCE && c->resource.type == RESOURCE_FOOD) {
-                ant->plan[0] = (Action){ACTION_PICKUP, p, {0}};
-                ant->plan_length = 1;
-                ant->state = STATE_RETURNING;
-                return;
-             }
+      for (int dx = -1; dx <= 1; dx++) {
+        if (dx == 0 && dy == 0)
+          continue;
+        Position p = {ant->position.x + dx, ant->position.y + dy};
+        if (world_in_bounds(w, p)) {
+          Cell *c = &w->grid[p.y * w->width + p.x];
+          if (c->type == CELL_RESOURCE && c->resource.type == RESOURCE_FOOD) {
+            ant->plan[0] = (Action){ACTION_PICKUP, p, {0}};
+            ant->plan_length = 1;
+            ant->state = STATE_RETURNING;
+            return;
           }
-       }
+        }
+      }
     }
 
     // Check observation radius for food to go to
     for (int dy = -obs_radius; dy <= obs_radius; dy++) {
       for (int dx = -obs_radius; dx <= obs_radius; dx++) {
-         if (dx*dx+dy*dy > obs_radius_sq) continue;
-         Position p = {ant->position.x + dx, ant->position.y + dy};
-         if (world_in_bounds(w, p)) {
-            Cell *c = &w->grid[p.y * w->width + p.x];
-            if(c->type == CELL_RESOURCE && c->resource.type == RESOURCE_FOOD) {
-               target_food = p;
-               goto found_food;
-            }
-         }
+        if (dx * dx + dy * dy > obs_radius_sq)
+          continue;
+        Position p = {ant->position.x + dx, ant->position.y + dy};
+        if (world_in_bounds(w, p)) {
+          Cell *c = &w->grid[p.y * w->width + p.x];
+          if (c->type == CELL_RESOURCE && c->resource.type == RESOURCE_FOOD) {
+            target_food = p;
+            goto found_food;
+          }
+        }
       }
     }
-    
-    found_food:;
-    
+
+  found_food:;
+
     // If we see food, move towards it.
     if (world_in_bounds(w, target_food)) {
-       AntVector v = AntVector_from_positions(ant->position, target_food);
-       v = AntVector_normalize(v);
-       int tx = ant->position.x + (int)(v.x + (v.x > 0 ? 0.5f : -0.5f));
-       int ty = ant->position.y + (int)(v.y + (v.y > 0 ? 0.5f : -0.5f));
-       Position next_step = {tx, ty};
-       
-       if(world_in_bounds(w, next_step)) {
-          Cell *nc = &w->grid[next_step.y * w->width + next_step.x];
-          // Obstacle Rule: If DIRT -> Excavate
-          if (nc->type == CELL_RESOURCE && nc->resource.type == RESOURCE_DIRT) {
-              ant->plan[0] = (Action){ACTION_PICKUP, next_step, {0}};
-              ant->plan_length = 1;
-              ant->state = STATE_CLEARING; // Taking dirt to clear path
-              return;
-          } else if (nc->type == CELL_EMPTY) {
-              ant->plan[0] = (Action){ACTION_MOVE, next_step, {0}};
-              ant->plan_length = 1;
-              return;
-          }
-       }
+      AntVector v = AntVector_from_positions(ant->position, target_food);
+      v = AntVector_normalize(v);
+      int tx = ant->position.x + (int)(v.x + (v.x > 0 ? 0.5f : -0.5f));
+      int ty = ant->position.y + (int)(v.y + (v.y > 0 ? 0.5f : -0.5f));
+      Position next_step = {tx, ty};
+
+      if (world_in_bounds(w, next_step)) {
+        Cell *nc = &w->grid[next_step.y * w->width + next_step.x];
+        // Obstacle Rule: If DIRT -> Excavate
+        if (nc->type == CELL_RESOURCE && nc->resource.type == RESOURCE_DIRT) {
+          ant->plan[0] = (Action){ACTION_PICKUP, next_step, {0}};
+          ant->plan_length = 1;
+          ant->state = STATE_CLEARING; // Taking dirt to clear path
+          return;
+        } else if (nc->type == CELL_EMPTY) {
+          ant->plan[0] = (Action){ACTION_MOVE, next_step, {0}};
+          ant->plan_length = 1;
+          return;
+        }
+      }
     }
 
     // If no food in sight (or blocked by non-dirt), follow pheromones or wander
     // Follow Food Pheromone
     Position best_phero_pos = {-1, -1};
     float max_pher = -1.0f;
-    
+
     for (int dy = -1; dy <= 1; dy++) {
       for (int dx = -1; dx <= 1; dx++) {
-        if(dx==0 && dy==0) continue;
+        if (dx == 0 && dy == 0)
+          continue;
         Position p = {ant->position.x + dx, ant->position.y + dy};
-        if(world_in_bounds(w, p)) {
-           Cell *c = &w->grid[p.y * w->width + p.x];
-           if(c->pheromone_to_food > max_pher) {
-              max_pher = c->pheromone_to_food;
-              best_phero_pos = p;
-           }
+        if (world_in_bounds(w, p)) {
+          Cell *c = &w->grid[p.y * w->width + p.x];
+          if (c->pheromone_to_food > max_pher) {
+            max_pher = c->pheromone_to_food;
+            best_phero_pos = p;
+          }
         }
       }
     }
 
     if (max_pher > 0.01f && world_in_bounds(w, best_phero_pos)) {
-        Cell *nc = &w->grid[best_phero_pos.y * w->width + best_phero_pos.x];
-        // Even following pheromones, we might hit dirt if someone deposited scent on it
-        if (nc->type == CELL_RESOURCE && nc->resource.type == RESOURCE_DIRT) {
-             ant->plan[0] = (Action){ACTION_PICKUP, best_phero_pos, {0}};
-                             ant->plan_length = 1;
-          ant->state = STATE_CLEARING;
-        } else if (nc->type == CELL_EMPTY) {
-           ant->plan[0] = (Action){ACTION_MOVE, best_phero_pos, {0}};
-           ant->plan_length = 1;
-        }
+      Cell *nc = &w->grid[best_phero_pos.y * w->width + best_phero_pos.x];
+      // Even following pheromones, we might hit dirt if someone deposited scent
+      // on it
+      if (nc->type == CELL_RESOURCE && nc->resource.type == RESOURCE_DIRT) {
+        ant->plan[0] = (Action){ACTION_PICKUP, best_phero_pos, {0}};
+        ant->plan_length = 1;
+        ant->state = STATE_CLEARING;
+      } else if (nc->type == CELL_EMPTY) {
+        ant->plan[0] = (Action){ACTION_MOVE, best_phero_pos, {0}};
+        ant->plan_length = 1;
+      }
     } else {
-       // Lost food trail? Wander or revert to SCOUTING
-       ant->state = STATE_SCOUTING;
+      // Lost food trail? Wander or revert to SCOUTING
+      ant->state = STATE_SCOUTING;
     }
-    
+
     break;
   }
 
@@ -327,101 +331,106 @@ void ant_think(int ant_id, World *w) {
     // 1. Check distance to nest
     float dist = sqrtf(dist_sq(ant->position, w->nest.position));
     if (dist <= w->nest.radius) {
-       // Try to drop
-       bool dropped = false;
-       for (int dy = -1; dy <= 1; dy++) {
-         for (int dx = -1; dx <= 1; dx++) {
-            if(dx==0 && dy ==0) continue;
-            Position p = {ant->position.x + dx, ant->position.y + dy};
-            if(world_in_bounds(w, p)) {
-               Cell *c = &w->grid[p.y * w->width + p.x];
-               if(c->type == CELL_EMPTY) {
-                  ant->plan[0] = (Action){ACTION_DROP, p, {0}};
-                  ant->plan_length = 1;
-                  ant->state = STATE_SCOUTING;
-                  dropped = true;
-                  goto done_returning;
-               }
+      // Try to drop
+      bool dropped = false;
+      for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++) {
+          if (dx == 0 && dy == 0)
+            continue;
+          Position p = {ant->position.x + dx, ant->position.y + dy};
+          if (world_in_bounds(w, p)) {
+            Cell *c = &w->grid[p.y * w->width + p.x];
+            if (c->type == CELL_EMPTY) {
+              ant->plan[0] = (Action){ACTION_DROP, p, {0}};
+              ant->plan_length = 1;
+              ant->state = STATE_SCOUTING;
+              dropped = true;
+              goto done_returning;
             }
-         }
-       }
-       done_returning:
-       if(dropped) return;
-       
-       // If no space, wander around nest (random move)
-       int rx = (rand() % 3) - 1;
-       int ry = (rand() % 3) - 1;
-       Position rp = {ant->position.x + rx, ant->position.y + ry};
-       if(world_in_bounds(w, rp)) {
-          Cell *rc = &w->grid[rp.y * w->width + rp.x];
-          if(rc->type == CELL_EMPTY) {
-             ant->plan[0] = (Action){ACTION_MOVE, rp, {0}};
-             ant->plan_length = 1;
           }
-       }
-       return;
+        }
+      }
+    done_returning:
+      if (dropped)
+        return;
+
+      // If no space, wander around nest (random move)
+      int rx = (rand() % 3) - 1;
+      int ry = (rand() % 3) - 1;
+      Position rp = {ant->position.x + rx, ant->position.y + ry};
+      if (world_in_bounds(w, rp)) {
+        Cell *rc = &w->grid[rp.y * w->width + rp.x];
+        if (rc->type == CELL_EMPTY) {
+          ant->plan[0] = (Action){ACTION_MOVE, rp, {0}};
+          ant->plan_length = 1;
+        }
+      }
+      return;
     }
 
     // 2. Follow Home Pheromone or Vision
     // If nest visible (radius), go direct
     if (dist <= obs_radius) {
-       AntVector v = AntVector_from_positions(ant->position, w->nest.position);
-       v = AntVector_normalize(v);
-       int tx = ant->position.x + (int)(v.x + (v.x > 0 ? 0.5f : -0.5f));
-       int ty = ant->position.y + (int)(v.y + (v.y > 0 ? 0.5f : -0.5f));
-       Position next_step = {tx, ty};
-        if(world_in_bounds(w, next_step)) {
-           Cell *nc = &w->grid[next_step.y * w->width + next_step.x];
-           if(nc->type == CELL_EMPTY) {
-              ant->plan[0] = (Action){ACTION_MOVE, next_step, {0}};
-              ant->plan_length = 1;
-              return;
-           }
+      AntVector v = AntVector_from_positions(ant->position, w->nest.position);
+      v = AntVector_normalize(v);
+      int tx = ant->position.x + (int)(v.x + (v.x > 0 ? 0.5f : -0.5f));
+      int ty = ant->position.y + (int)(v.y + (v.y > 0 ? 0.5f : -0.5f));
+      Position next_step = {tx, ty};
+      if (world_in_bounds(w, next_step)) {
+        Cell *nc = &w->grid[next_step.y * w->width + next_step.x];
+        if (nc->type == CELL_EMPTY) {
+          ant->plan[0] = (Action){ACTION_MOVE, next_step, {0}};
+          ant->plan_length = 1;
+          return;
         }
+      }
     }
-    
+
     // Follow Trail
     Position best_home = {-1, -1};
     float max_home = -1.0f;
     for (int dy = -1; dy <= 1; dy++) {
       for (int dx = -1; dx <= 1; dx++) {
-        if(dx==0 && dy==0) continue;
+        if (dx == 0 && dy == 0)
+          continue;
         Position p = {ant->position.x + dx, ant->position.y + dy};
-        if(world_in_bounds(w, p)) {
-           Cell *c = &w->grid[p.y * w->width + p.x];
-           if(c->pheromone_to_home > max_home) {
-              max_home = c->pheromone_to_home;
-              best_home = p;
-           }
+        if (world_in_bounds(w, p)) {
+          Cell *c = &w->grid[p.y * w->width + p.x];
+          if (c->pheromone_to_home > max_home) {
+            max_home = c->pheromone_to_home;
+            best_home = p;
+          }
         }
       }
     }
-    
+
     if (max_home > 0.01f && world_in_bounds(w, best_home)) {
-       Cell *nc = &w->grid[best_home.y * w->width + best_home.x];
-       if(nc->type == CELL_EMPTY) {
-          ant->plan[0] = (Action){ACTION_MOVE, best_home, {0}};
-          ant->plan_length = 1;
-       }
-       ant->frustration = 0;
+      Cell *nc = &w->grid[best_home.y * w->width + best_home.x];
+      if (nc->type == CELL_EMPTY) {
+        ant->plan[0] = (Action){ACTION_MOVE, best_home, {0}};
+        ant->plan_length = 1;
+      }
+      ant->frustration = 0;
     } else {
-       // Lost -> Increase frustration
-       ant->frustration++;
-       if (ant->frustration > 100) { // e.g., 2-3 seconds at 60fps? Or just 10 steps?
-          ant->state = STATE_SEARCHING_HOME;
-          ant->frustration = 0;
-       } else {
-          // Wander slightly
-          int rx = (rand() % 3) - 1;
-          int ry = (rand() % 3) - 1;
-          Position rp = {ant->position.x + rx, ant->position.y + ry};
-          if(world_in_bounds(w, rp) && w->grid[rp.y*w->width+rp.x].type == CELL_EMPTY) {
-             ant->plan[0] = (Action){ACTION_MOVE, rp, {0}};
-             ant->plan_length = 1;
-          }
-       }
+      // Lost -> Increase frustration
+      ant->frustration++;
+      if (ant->frustration >
+          100) { // e.g., 2-3 seconds at 60fps? Or just 10 steps?
+        ant->state = STATE_SEARCHING_HOME;
+        ant->frustration = 0;
+      } else {
+        // Wander slightly
+        int rx = (rand() % 3) - 1;
+        int ry = (rand() % 3) - 1;
+        Position rp = {ant->position.x + rx, ant->position.y + ry};
+        if (world_in_bounds(w, rp) &&
+            w->grid[rp.y * w->width + rp.x].type == CELL_EMPTY) {
+          ant->plan[0] = (Action){ACTION_MOVE, rp, {0}};
+          ant->plan_length = 1;
+        }
+      }
     }
-    
+
     break;
   }
 
@@ -443,8 +452,8 @@ void ant_think(int ant_id, World *w) {
         Position p = {ant->position.x + dx, ant->position.y + dy};
         if (world_in_bounds(w, p)) {
           Cell *c = &w->grid[p.y * w->width + p.x];
-          float val =
-              c->pheromone_to_food + c->pheromone_to_home + c->pheromone_visited;
+          float val = c->pheromone_to_food + c->pheromone_to_home +
+                      c->pheromone_visited;
           if (val < min_phero) {
             min_phero = val;
             best_spot = p;
@@ -469,79 +478,82 @@ void ant_think(int ant_id, World *w) {
         }
       }
     }
-    
+
     // Fallback if no plan
     if (ant->plan_length == 0) {
       int rx = (rand() % 3) - 1;
       int ry = (rand() % 3) - 1;
       Position rp = {ant->position.x + rx, ant->position.y + ry};
       if (world_in_bounds(w, rp)) {
-         Cell *rc = &w->grid[rp.y * w->width + rp.x];
-         if (rc->type == CELL_EMPTY) {
-            ant->plan[0] = (Action){ACTION_MOVE, rp, {0}};
-            ant->plan_length = 1;
-         }
+        Cell *rc = &w->grid[rp.y * w->width + rp.x];
+        if (rc->type == CELL_EMPTY) {
+          ant->plan[0] = (Action){ACTION_MOVE, rp, {0}};
+          ant->plan_length = 1;
+        }
       }
     }
     break;
   }
 
   case STATE_SEARCHING_HOME: {
-     // Timeout check
-     ant->frustration++;
-     if (ant->frustration > 1000) {
-        // Drop food to survive (become scout)
-        if(ant->is_carring) {
-           ant->plan[0] = (Action){ACTION_DROP, ant->position, {0}}; 
-           // Can only drop on empty neighbor, but drop action usually takes target
-           // Let's find empty neighbor
-           for(int dy=-1; dy<=1; dy++) {
-              for(int dx=-1; dx<=1; dx++) {
-                 if(dx==0 && dy==0) continue;
-                 Position p = {ant->position.x+dx, ant->position.y+dy};
-                 if(world_in_bounds(w, p) && w->grid[p.y*w->width+p.x].type == CELL_EMPTY) {
-                    ant->plan[0] = (Action){ACTION_DROP, p, {0}};
-                    ant->plan_length = 1;
-                    ant->state = STATE_SCOUTING;
-                    ant->frustration = 0;
-                    return;
-                 }
-              }
-           }
-        } else {
-             ant->state = STATE_SCOUTING;
-             ant->frustration = 0;
+    // Timeout check
+    ant->frustration++;
+    if (ant->frustration > 1000) {
+      // Drop food to survive (become scout)
+      if (ant->is_carring) {
+        ant->plan[0] = (Action){ACTION_DROP, ant->position, {0}};
+        // Can only drop on empty neighbor, but drop action usually takes target
+        // Let's find empty neighbor
+        for (int dy = -1; dy <= 1; dy++) {
+          for (int dx = -1; dx <= 1; dx++) {
+            if (dx == 0 && dy == 0)
+              continue;
+            Position p = {ant->position.x + dx, ant->position.y + dy};
+            if (world_in_bounds(w, p) &&
+                w->grid[p.y * w->width + p.x].type == CELL_EMPTY) {
+              ant->plan[0] = (Action){ACTION_DROP, p, {0}};
+              ant->plan_length = 1;
+              ant->state = STATE_SCOUTING;
+              ant->frustration = 0;
+              return;
+            }
+          }
         }
-     }
-     
-     // Random Walk + Spiral attempt (Spiral is hard, just expansive random)
-     // Also check if we smell home
-     float max_home = -1.0f;
-     for (int dy = -2; dy <= 2; dy++) {
-        for (int dx = -2; dx <= 2; dx++) {
-           Position p = {ant->position.x+dx, ant->position.y+dy};
-           if(world_in_bounds(w, p)) {
-              if(w->grid[p.y*w->width+p.x].pheromone_to_home > max_home) {
-                 max_home = w->grid[p.y*w->width+p.x].pheromone_to_home;
-              }
-           }
-        }
-     }
-     
-     if(max_home > 0.1f) {
-        ant->state = STATE_RETURNING;
+      } else {
+        ant->state = STATE_SCOUTING;
         ant->frustration = 0;
-        return;
-     }
-     
-     // Move randomly
-      int rx = (rand() % 3) - 1;
-      int ry = (rand() % 3) - 1;
-      Position rp = {ant->position.x + rx, ant->position.y + ry};
-      if (world_in_bounds(w, rp) && w->grid[rp.y*w->width+rp.x].type == CELL_EMPTY) {
-            ant->plan[0] = (Action){ACTION_MOVE, rp, {0}};
-            ant->plan_length = 1;
       }
+    }
+
+    // Random Walk + Spiral attempt (Spiral is hard, just expansive random)
+    // Also check if we smell home
+    float max_home = -1.0f;
+    for (int dy = -2; dy <= 2; dy++) {
+      for (int dx = -2; dx <= 2; dx++) {
+        Position p = {ant->position.x + dx, ant->position.y + dy};
+        if (world_in_bounds(w, p)) {
+          if (w->grid[p.y * w->width + p.x].pheromone_to_home > max_home) {
+            max_home = w->grid[p.y * w->width + p.x].pheromone_to_home;
+          }
+        }
+      }
+    }
+
+    if (max_home > 0.1f) {
+      ant->state = STATE_RETURNING;
+      ant->frustration = 0;
+      return;
+    }
+
+    // Move randomly
+    int rx = (rand() % 3) - 1;
+    int ry = (rand() % 3) - 1;
+    Position rp = {ant->position.x + rx, ant->position.y + ry};
+    if (world_in_bounds(w, rp) &&
+        w->grid[rp.y * w->width + rp.x].type == CELL_EMPTY) {
+      ant->plan[0] = (Action){ACTION_MOVE, rp, {0}};
+      ant->plan_length = 1;
+    }
     break;
   }
   }
