@@ -16,3 +16,13 @@ void resource_free(Resource *r) {
   }
   memset(r, 0, sizeof(*r));
 }
+
+Resource resource_dirt() {
+  return (Resource){.value = 0, .weight = 1, .type = RESOURCE_DIRT};
+}
+Resource resource_food() {
+  return (Resource){.value = 8, .weight = 5, .type = RESOURCE_FOOD};
+}
+Resource resource_reservoir() {
+  return (Resource){.value = 10, .weight = 5, .type = RESOURCE_RESERVOIR};
+}

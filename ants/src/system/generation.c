@@ -10,8 +10,9 @@ void gen_world(World *world, unsigned int seed) {
   float surface_freq = 0.1f;
   float cave_freq = 0.15f;
   float cave_threshold = 0.6f;
-  int num_deposits =
-      1e-3 * world->height * world->width * (1 + 0.1 * (rand() % 2) - 0.5);
+
+  float factor = 0.75 + (rand() % 50 + 1) / 100.0; // between 0.75 and 1.25
+  int num_deposits = 1e-3 * world->height * world->width * factor;
 
   for (int x = 0; x < world->width; x++) {
     float n_surf = noise2d(x * surface_freq, 0.0f, seed);
@@ -28,8 +29,7 @@ void gen_world(World *world, unsigned int seed) {
 
       if (y >= surface_y) {
         c->type = CELL_RESOURCE;
-        c->resource =
-            (Resource){.type = RESOURCE_DIRT, .value = 0, .weight = 10};
+        c->resource = resource_dirt();
         float n_cave = noise2d(x * cave_freq, y * cave_freq + 100.0f, seed);
         if (n_cave > cave_threshold) {
           c->type = CELL_EMPTY;
@@ -59,9 +59,7 @@ void gen_world(World *world, unsigned int seed) {
             if (c->type == CELL_EMPTY || (c->type == CELL_RESOURCE &&
                                           c->resource.type == RESOURCE_DIRT)) {
               c->type = CELL_RESOURCE;
-              c->resource.type = RESOURCE_FOOD;
-              c->resource.value = 10;
-              c->resource.weight = 1;
+              c->resource = resource_food();
             }
           }
         }
@@ -88,8 +86,7 @@ void gen_world(World *world, unsigned int seed) {
         int py = nest_y + dy;
         if (px >= 0 && px < world->width && py >= 0 && py < world->height) {
           world->grid[py * world->width + px].type = CELL_RESOURCE;
-          world->grid[py * world->width + px].resource =
-              (Resource){.type = RESOURCE_DIRT, .value = 0, .weight = 10};
+          world->grid[py * world->width + px].resource = resource_dirt();
         }
       }
     }
@@ -101,11 +98,9 @@ void gen_world(World *world, unsigned int seed) {
     int py = nest_y + dy;
     if (px >= 0 && px < world->width && py >= 0 && py < world->height) {
       world->grid[py * world->width + px].type = CELL_RESOURCE;
-      world->grid[py * world->width + px].resource =
-          (Resource){.type = RESOURCE_DIRT, .value = 0, .weight = 10};
+      world->grid[py * world->width + px].resource = resource_dirt();
     }
   }
-  world->nest_pos = (Position){.x = nest_x, .y = nest_y * world->width};
+  world->nest.position = (Position){.x = nest_x, .y = nest_y};
   world->grid[nest_y * world->width + nest_x].type = CELL_NEST;
-  world->nest_pos = (Position){nest_x, nest_y};
 }

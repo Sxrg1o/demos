@@ -18,4 +18,8 @@ typedef struct {
 void resource_init(Resource *r, int value, int weight, ResourceType type);
 void resource_free(Resource *r);
 
+Resource resource_dirt();
+Resource resource_food();
+Resource resource_reservoir();
+
 #endif // RESOURCE_H

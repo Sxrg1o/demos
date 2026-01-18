@@ -9,8 +9,12 @@ int world_init(World *w, int width, int height) {
 
   w->width = width;
   w->height = height;
-  w->num_ants = 0;
-  w->next_ant_idx = 0;
+  memset(&w->nest.ants, 0, sizeof(Ant) * MAX_ANTS);
+  w->nest.num_ants = 0;
+  w->nest.stored_food = 0;
+  w->nest.radius = NEST_INITIAL_RADIUS;
+  w->nest.position.x = 0;
+  w->nest.position.y = 0;
   w->grid = malloc(sizeof(Cell) * width * height);
   if (!w->grid) {
     return -1;
@@ -38,6 +42,12 @@ void world_free(World *w) {
   w->grid = NULL;
   w->width = 0;
   w->height = 0;
+  memset(&w->nest.ants, 0, sizeof(Ant) * MAX_ANTS);
+  w->nest.num_ants = 0;
+  w->nest.stored_food = 0;
+  w->nest.radius = 0;
+  w->nest.position.x = 0;
+  w->nest.position.y = 0;
 }
 
 bool world_in_bounds(const World *w, Position p) {
@@ -74,4 +84,19 @@ void world_vacate_cell(World *w, Position p) {
   Cell *c = &w->grid[p.y * w->width + p.x];
   c->type = CELL_EMPTY;
   c->ant_id = -1;
+}
+
+void nest_update_radius(AntNest *nest) {
+  if (!nest) {
+    return;
+  }
+  // updates radius based on stored food amount
+  nest->radius = NEST_INITIAL_RADIUS + (nest->stored_food / 10);
+}
+
+void nest_set_food(AntNest *nest, int amount) {
+  if (!nest) {
+    return;
+  }
+  nest->stored_food = amount;
 }
