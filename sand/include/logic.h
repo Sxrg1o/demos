@@ -24,50 +24,56 @@ typedef enum {
 } ChemFlags;
 
 typedef struct {
-    int solid_id;
-    int liquid_id;
-    int gas_id;
     float melting_point;
     float boiling_point;
     float ignite_temperature;
+    float density_gas_mult;
+    float density_liq_mult;
 } MaterialFamily;
 
 typedef struct {
-    const char* name;
-
-    ElementState state;
+    uint8_t state;
     float density;
     int dispersion;     // Like viscosity (pixel/frame)
-
     float base_temp;
-    float heat_conductivity;
-    int family_id;
 
+    float temperature;
+    float heat_conductivity;
+    uint8_t family_idx;
+    
     uint32_t chem_flags;
     float acid_resist;
 
     Color base_color;
-    float color_variance;    
-} ElementDef;
+    float color_variance; 
 
-typedef struct {
-    uint8_t type;
     uint8_t life;       // Fire/Smoke or corrosive materials
     uint8_t payload;    // For color herency
-    float temperature;
+
+    bool is_empty;
 } Cell;
 
 #define WORLD_WIDTH 480
 #define WORLD_HEIGHT 270
+#define MAX_FAMILIES 16
 
 typedef struct {
-    Cell cells[WORLD_WIDTH * WORLD_HEIGHT];
-    uint8_t global_clock;
-    ElementDef elements[80];
-    MaterialFamily families[16];
+    Cell* cells;
+    MaterialFamily families[MAX_FAMILIES];
     int family_count;
-    int element_count;
+    uint8_t global_clock;
+    int width;
+    int height;
 } World;
 
+#define FAM_DEFAULT 0
+#define FAM_WATER 1
+#define FAM_STONE 2
+#define FAM_ORGANIC 3
+
 void init_world(World*);
-void create_pixel(World*);
+void destroy_world(World*);
+Cell* get_cell(World*, int, int);
+
+void set_cell(Cell*, ElementState, Color, float, float, uint8_t, uint32_t, float);
+void set_cell_empty(Cell*);
