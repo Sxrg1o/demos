@@ -3,7 +3,6 @@
 #include "system/render.h"
 #include "system/simulation.h"
 #include <raylib.h>
-#include <time.h>
 
 int main() {
   int factor = 10;
@@ -12,7 +11,7 @@ int main() {
 
   World world;
   world_init(&world, W / CELL_SIZE, H / CELL_SIZE);
-  gen_world(&world, (unsigned int)time(NULL));
+  gen_flat_world(&world, 5);
 
   InitWindow(W, H, "Ants");
   SetTargetFPS(60);

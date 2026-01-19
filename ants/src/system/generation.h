@@ -5,5 +5,6 @@
 #include "ant_world.h"
 
 void gen_world(World *world, unsigned int seed);
+void gen_flat_world(World *world, int empty_width);
 
 #endif // GENERATION_H

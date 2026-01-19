@@ -104,3 +104,73 @@ void gen_world(World *world, unsigned int seed) {
   world->nest.position = (Position){.x = nest_x, .y = nest_y};
   world->grid[nest_y * world->width + nest_x].type = CELL_NEST;
 }
+
+void gen_flat_world(World *world, int empty_width) {
+  for (int x = 0; x < world->width; x++) {
+    for (int y = 0; y < world->height; y++) {
+      Cell *c = &world->grid[y * world->width + x];
+
+      c->pheromone_to_food = 0.0f;
+      c->pheromone_to_home = 0.0f;
+      c->pheromone_visited = 0.0f;
+      c->ant_id = -1;
+      c->type = CELL_EMPTY;
+    }
+  }
+
+  /*
+    x x x x x x x x x x -> w->height / 2 - empty_radius
+          ANT_NEST      -> empty_radius
+    x x x x x x x x x x ->
+  */
+  int upper_bound = world->height / 2 - empty_width;
+  int lower_bound = upper_bound + empty_width + 1;
+
+  for (int y = 0; y < world->height; y++) {
+    if (y < lower_bound && upper_bound < y) {
+      continue;
+    }
+    for (int x = 0; x < world->width; x++) {
+      Cell *c = &world->grid[y * world->width + x];
+      c->resource = resource_dirt();
+      c->type = CELL_RESOURCE;
+    }
+  }
+
+  Position nest_pos = {.y = world->height / 2, .x = world->width / 2};
+  world->nest.position = nest_pos;
+  Cell *nest_cell = &world->grid[nest_pos.y * world->width + nest_pos.x];
+  nest_cell->type = CELL_NEST;
+
+  int food_radius = 4;
+  Position left_fr = {.x = food_radius + 1, .y = world->height / 2};
+  Position right_fr = {.x = (world->width - 1) - food_radius - 1,
+                       .y = world->height / 2};
+
+  for (int dy = -food_radius; dy <= food_radius; dy++) {
+    for (int dx = -food_radius; dx <= food_radius; dx++) {
+      if ((dx * dx + dy * dy) > food_radius * food_radius) {
+        continue;
+      }
+      int l_x = left_fr.x + dx;
+      int l_y = left_fr.y + dy;
+      int r_x = right_fr.x + dx;
+      int r_y = right_fr.y + dy;
+      if (!world_in_bounds(world, (Position){.x = l_x, .y = l_y})) {
+        continue;
+      }
+      if (!world_in_bounds(world, (Position){.x = r_x, .y = r_y})) {
+        continue;
+      }
+
+      Cell *l_c = &world->grid[l_y * world->width + l_x];
+      Cell *r_c = &world->grid[r_y * world->width + r_x];
+
+      l_c->resource = resource_food();
+      l_c->type = CELL_RESOURCE;
+
+      r_c->resource = resource_food();
+      r_c->type = CELL_RESOURCE;
+    }
+  }
+}
