@@ -13,7 +13,7 @@ void ant_init(Ant *ant, int ant_id, Position pos, Position nest_pos) {
   ant->plan_length = 0;
   ant->plan_idx = 0;
   memset(ant->plan, 0, sizeof(ant->plan));
-  
+
   ant->state = STATE_SCOUTING;
   ant->origin_pos = (Position){0, 0};
   ant->frustration = 0;
@@ -24,10 +24,10 @@ void ant_free(Ant *ant) {
 }
 
 bool ant_next_action(Ant *ant, Action *out_action) {
-  if(!ant || !out_action) {
+  if (!ant || !out_action) {
     return false;
   }
-  if(ant->plan_idx < 0 || ant->plan_idx >= ant->plan_length) {
+  if (ant->plan_idx < 0 || ant->plan_idx >= ant->plan_length) {
     return false;
   }
   *out_action = ant->plan[ant->plan_idx++];
@@ -35,11 +35,10 @@ bool ant_next_action(Ant *ant, Action *out_action) {
 }
 
 void ant_clear_plan(Ant *ant) {
-  if(!ant) {
+  if (!ant) {
     return;
   }
   memset(ant->plan, 0, sizeof(Action) * PLAN_SIZE);
   ant->plan_idx = 0;
   ant->plan_length = 0;
 }
-

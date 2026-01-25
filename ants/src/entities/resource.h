@@ -1,7 +1,7 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
-#include "../system/ant_math.h"
+#include "../engine/logic/ant_math.h"
 
 typedef enum {
   RESOURCE_DIRT,

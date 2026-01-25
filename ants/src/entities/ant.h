@@ -1,7 +1,7 @@
 #ifndef ANT_H
 #define ANT_H
 
-#include "../system/ant_math.h"
+#include "../engine/logic/ant_math.h"
 #include "resource.h"
 #include <stdbool.h>
 
@@ -9,10 +9,10 @@
 #define ANT_RADIUS 10
 
 typedef enum {
-  STATE_SCOUTING,   // Exploring (Looking for food)
-  STATE_HARVESTING, // Found trail, going to food
-  STATE_RETURNING,  // Carrying food, going to nest
-  STATE_CLEARING,   // Carrying dirt, clearing path
+  STATE_SCOUTING,      // Exploring (Looking for food)
+  STATE_HARVESTING,    // Found trail, going to food
+  STATE_RETURNING,     // Carrying food, going to nest
+  STATE_CLEARING,      // Carrying dirt, clearing path
   STATE_SEARCHING_HOME // Lost ant with food
 } AntState;
 
@@ -38,7 +38,7 @@ typedef struct {
   int plan_idx;
   Position nest_position;
   int id;
-  
+
   // Intelligence
   AntState state;
   Position origin_pos; // Where I picked up the current burden

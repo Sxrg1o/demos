@@ -1,8 +1,8 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
+#include "../world/ant_world.h"
 #include "ant_math.h"
-#include "ant_world.h"
 
 // Entities Management
 bool entity_spawn_ant(World *w, Position p);

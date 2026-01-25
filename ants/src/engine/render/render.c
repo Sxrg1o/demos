@@ -1,5 +1,4 @@
 #include "render.h"
-#include "ant_world.h"
 #include <math.h>
 #include <raylib.h>
 
@@ -34,7 +33,7 @@ void render_world(const World *w) {
         cell_color = DARKGRAY;
         break;
       }
-      
+
       float p_food = cell.pheromone_to_food;
       float p_home = cell.pheromone_to_home;
       float p_visited = cell.pheromone_visited;

@@ -1,7 +1,7 @@
-#include "system/ant_world.h"
-#include "system/generation.h"
-#include "system/render.h"
-#include "system/simulation.h"
+#include "engine/logic/simulation.h"
+#include "engine/render/render.h"
+#include "engine/world/ant_world.h"
+#include "engine/world/generation.h"
 #include <raylib.h>
 
 int main() {

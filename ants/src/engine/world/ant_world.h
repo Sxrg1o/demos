@@ -1,9 +1,9 @@
 #ifndef ANT_WORLD_H
 #define ANT_WORLD_H
 
-#include "../entities/ant.h"
-#include "../entities/resource.h"
-#include "ant_math.h"
+#include "../../entities/ant.h"
+#include "../../entities/resource.h"
+#include "../logic/ant_math.h"
 #include <stdbool.h>
 #define MAX_ANTS 100
 
@@ -49,7 +49,6 @@ bool world_in_bounds(const World *w, Position p);
 bool world_is_occupied(const World *w, Position p);
 void world_occupy_cell(World *w, Position p, Cell cell);
 void world_vacate_cell(World *w, Position p);
-
 
 void nest_update_radius(AntNest *nest);
 void nest_set_food(AntNest *nest, int amount);

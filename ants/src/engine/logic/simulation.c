@@ -1,7 +1,4 @@
 #include "simulation.h"
-#include "../entities/ant.h"
-#include "ant_math.h"
-#include "ant_world.h"
 #include <math.h>
 #include <stdlib.h>
 

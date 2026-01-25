@@ -1,5 +1,4 @@
 #include "generation.h"
-#include "ant_math.h"
 #include "ant_world.h"
 #include <stdlib.h>
 
