@@ -26,6 +26,7 @@ int world_init(World *w, int width, int height) {
       c->type = CELL_EMPTY;
       c->pheromone_food = 0.0f;
       c->pheromone_build = 0.0f;
+      c->bg_variant = (uint8_t)(rand() % 256);
     }
   }
   return 0;

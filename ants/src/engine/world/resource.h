@@ -2,7 +2,7 @@
 #define RESOURCE_H
 
 #include "../logic/ant_math.h"
-
+#include <stdint.h>
 typedef enum {
   RESOURCE_DIRT,
   RESOURCE_FOOD,
@@ -12,6 +12,7 @@ typedef enum {
 typedef struct {
   int value;
   int weight;
+  uint8_t variant; // 0-255 for visual noise
   ResourceType type;
 } Resource;
 

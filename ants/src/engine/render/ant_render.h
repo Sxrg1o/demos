@@ -4,8 +4,8 @@
 #include "../world/ant_world.h"
 #include <stdint.h>
 
-#define COLOR_SKY 0x87CEEBFF       // Light Blue (R=87, G=CE, B=EB)
-#define COLOR_DIRT 0x8B4513FF      // Saddle Brown (R=8B, G=45, B=13)
+#define COLOR_BACKGROUND 0x5C4033FF // Dark Dirt / Background Wall
+#define COLOR_DIRT 0x8B4513FF       // Saddle Brown (R=8B, G=45, B=13)
 #define COLOR_FOOD 0xFF0000FF      // Red
 #define COLOR_RESERVOIR 0x00FF00FF // Green
 #define COLOR_ANT 0x000000FF       // Black

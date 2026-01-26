@@ -32,6 +32,7 @@ typedef struct {
   float pheromone_food;  // scent to food
   float pheromone_build; // scent for building
   Resource resource;     // if type is CELL_RESOURCE
+  uint8_t bg_variant;    // 0-255 for visual noise (background/empty)
   CellType type;
 } Cell;
 
