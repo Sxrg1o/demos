@@ -24,10 +24,8 @@ int world_init(World *w, int width, int height) {
     for (int y = 0; y < height; y++) {
       Cell *c = &w->grid[y * width + x];
       c->type = CELL_EMPTY;
-      c->ant_id = -1;
-      c->pheromone_to_food = 0.0f;
-      c->pheromone_to_home = 0.0f;
-      c->pheromone_visited = 0.0f;
+      c->pheromone_food = 0.0f;
+      c->pheromone_build = 0.0f;
     }
   }
   return 0;
@@ -50,40 +48,37 @@ void world_free(World *w) {
   w->nest.position.y = 0;
 }
 
-bool world_in_bounds(const World *w, Position p) {
+bool world_in_bounds(const World *w, AntVector p) {
   if (!w) {
     return false;
   }
   return p.x >= 0 && p.x < w->width && p.y >= 0 && p.y < w->height;
 }
 
-bool world_is_occupied(const World *w, Position p) {
+bool world_is_occupied(const World *w, AntVector p) {
   if (!w || !w->grid || !world_in_bounds(w, p)) {
     return true;
   }
-  return w->grid[p.y * w->width + p.x].type != CELL_EMPTY;
+  return w->grid[(int)p.y * w->width + (int)p.x].type != CELL_EMPTY;
 }
 
-void world_occupy_cell(World *w, Position p, Cell cell) {
+void world_occupy_cell(World *w, AntVector p, Cell cell) {
   if (!w || !w->grid || !world_in_bounds(w, p)) {
     return;
   }
-  Cell *dest = &w->grid[p.y * w->width + p.x];
+  Cell *dest = &w->grid[(int)p.y * w->width + (int)p.x];
   dest->resource = cell.resource;
-  dest->ant_id = cell.ant_id;
   dest->type = cell.type;
-  dest->pheromone_to_food = cell.pheromone_to_food;
-  dest->pheromone_to_home = cell.pheromone_to_home;
-  dest->pheromone_visited = cell.pheromone_visited;
+  dest->pheromone_food = cell.pheromone_food;
+  dest->pheromone_build = cell.pheromone_build;
 }
 
-void world_vacate_cell(World *w, Position p) {
+void world_vacate_cell(World *w, AntVector p) {
   if (!w || !w->grid || !world_in_bounds(w, p)) {
     return;
   }
-  Cell *c = &w->grid[p.y * w->width + p.x];
+  Cell *c = &w->grid[(int)p.y * w->width + (int)p.x];
   c->type = CELL_EMPTY;
-  c->ant_id = -1;
 }
 
 void nest_update_radius(AntNest *nest) {

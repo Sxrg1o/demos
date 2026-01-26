@@ -20,10 +20,8 @@ void gen_world(World *world, unsigned int seed) {
     for (int y = 0; y < world->height; y++) {
       Cell *c = &world->grid[y * world->width + x];
 
-      c->pheromone_to_food = 0.0f;
-      c->pheromone_to_home = 0.0f;
-      c->pheromone_visited = 0.0f;
-      c->ant_id = -1;
+      c->pheromone_food = 0.0f;
+      c->pheromone_build = 0.0f;
       c->type = CELL_EMPTY;
 
       if (y >= surface_y) {
@@ -100,7 +98,7 @@ void gen_world(World *world, unsigned int seed) {
       world->grid[py * world->width + px].resource = resource_dirt();
     }
   }
-  world->nest.position = (Position){.x = nest_x, .y = nest_y};
+  world->nest.position = (AntVector){.x = nest_x, .y = nest_y};
   world->grid[nest_y * world->width + nest_x].type = CELL_NEST;
 }
 
@@ -109,10 +107,8 @@ void gen_flat_world(World *world, int empty_width) {
     for (int y = 0; y < world->height; y++) {
       Cell *c = &world->grid[y * world->width + x];
 
-      c->pheromone_to_food = 0.0f;
-      c->pheromone_to_home = 0.0f;
-      c->pheromone_visited = 0.0f;
-      c->ant_id = -1;
+      c->pheromone_food = 0.0f;
+      c->pheromone_build = 0.0f;
       c->type = CELL_EMPTY;
     }
   }
@@ -136,15 +132,16 @@ void gen_flat_world(World *world, int empty_width) {
     }
   }
 
-  Position nest_pos = {.y = world->height / 2, .x = world->width / 2};
+  AntVector nest_pos = {.y = world->height / 2.0f, .x = world->width / 2.0f};
   world->nest.position = nest_pos;
-  Cell *nest_cell = &world->grid[nest_pos.y * world->width + nest_pos.x];
+  Cell *nest_cell =
+      &world->grid[(int)nest_pos.y * world->width + (int)nest_pos.x];
   nest_cell->type = CELL_NEST;
 
   int food_radius = 4;
-  Position left_fr = {.x = food_radius + 1, .y = world->height / 2};
-  Position right_fr = {.x = (world->width - 1) - food_radius - 1,
-                       .y = world->height / 2};
+  AntVector left_fr = {.x = food_radius + 1, .y = world->height / 2.0f};
+  AntVector right_fr = {.x = (world->width - 1) - food_radius - 1,
+                        .y = world->height / 2.0};
 
   for (int dy = -food_radius; dy <= food_radius; dy++) {
     for (int dx = -food_radius; dx <= food_radius; dx++) {
@@ -155,10 +152,10 @@ void gen_flat_world(World *world, int empty_width) {
       int l_y = left_fr.y + dy;
       int r_x = right_fr.x + dx;
       int r_y = right_fr.y + dy;
-      if (!world_in_bounds(world, (Position){.x = l_x, .y = l_y})) {
+      if (!world_in_bounds(world, (AntVector){.x = l_x, .y = l_y})) {
         continue;
       }
-      if (!world_in_bounds(world, (Position){.x = r_x, .y = r_y})) {
+      if (!world_in_bounds(world, (AntVector){.x = r_x, .y = r_y})) {
         continue;
       }
 

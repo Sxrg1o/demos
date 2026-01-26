@@ -5,15 +5,10 @@
 #include "ant_math.h"
 
 // Entities Management
-bool entity_spawn_ant(World *w, Position p);
-bool entity_kill_ant(int ant_id, World *w);
-bool entity_spawn_food(World *w, Position p, int radius);
+bool entity_spawn_ant(World *w, AntVector p);
+bool entity_spawn_food(World *w, AntVector p, int radius);
 
-// Planification
-void ant_think(int ant_id, World *w);
-
-// Simulation
-void system_update_ant(int ant_id, World *world);
+// Simulation Step
 void system_update_world(World *w);
 
 #endif // SIMULATION_H

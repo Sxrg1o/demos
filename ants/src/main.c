@@ -21,7 +21,7 @@ int main() {
       Vector2 m = GetMousePosition();
       int gx = (int)(m.x / CELL_SIZE);
       int gy = (int)(m.y / CELL_SIZE);
-      entity_spawn_ant(&world, (Position){gx, gy});
+      entity_spawn_ant(&world, (AntVector){gx, gy});
     }
 
     BeginDrawing();

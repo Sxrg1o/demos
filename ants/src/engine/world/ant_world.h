@@ -12,7 +12,7 @@
 #define NEST_INITIAL_RADIUS 3
 
 typedef struct {
-  Position position;
+  AntVector position;
   int radius;
   int stored_food;
   Ant ants[MAX_ANTS];
@@ -28,11 +28,9 @@ typedef enum {
 } CellType;
 
 typedef struct {
-  float pheromone_to_food; // scent to food (red)
-  float pheromone_to_home; // scent to home (blue)
-  float pheromone_visited; // scent for exploration
-  Resource resource;       // if type is CELL_RESOURCE
-  int ant_id;              // if type is CELL_ANT (-1 = none)
+  float pheromone_food;  // scent to food
+  float pheromone_build; // scent for building
+  Resource resource;     // if type is CELL_RESOURCE
   CellType type;
 } Cell;
 
@@ -45,10 +43,10 @@ typedef struct {
 
 int world_init(World *w, int width, int height);
 void world_free(World *w);
-bool world_in_bounds(const World *w, Position p);
-bool world_is_occupied(const World *w, Position p);
-void world_occupy_cell(World *w, Position p, Cell cell);
-void world_vacate_cell(World *w, Position p);
+bool world_in_bounds(const World *w, AntVector p);
+bool world_is_occupied(const World *w, AntVector p);
+void world_occupy_cell(World *w, AntVector p, Cell cell);
+void world_vacate_cell(World *w, AntVector p);
 
 void nest_update_radius(AntNest *nest);
 void nest_set_food(AntNest *nest, int amount);
