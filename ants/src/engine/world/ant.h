@@ -1,7 +1,7 @@
 #ifndef ANT_H
 #define ANT_H
 
-#include "../engine/logic/ant_math.h"
+#include "../logic/ant_math.h"
 #include "resource.h"
 #include <stdbool.h>
 
@@ -21,7 +21,7 @@ typedef struct {
   AntVector position;
   AntVector vector_to_nest;
   AntState state;
-  bool is_carring;
+  bool is_carrying;
   Resource carried_resource;
 } Ant;
 

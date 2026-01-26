@@ -8,7 +8,7 @@ void ant_init(Ant *ant, int ant_id, AntVector pos, AntVector nest_pos) {
   ant->vector_to_nest = AntVector_add(pos, AntVector_reverse(nest_pos));
   ant->id = ant_id;
   ant->state = RETURNING;
-  ant->is_carring = false;
+  ant->is_carrying = false;
   ant->carried_resource = (Resource){0};
 }
 

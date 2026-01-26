@@ -20,8 +20,8 @@ int world_init(World *w, int width, int height) {
     return -1;
   }
   memset(w->grid, 0, sizeof(Cell) * width * height);
-  for (int x = 0; x < width; x++) {
-    for (int y = 0; y < height; y++) {
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
       Cell *c = &w->grid[y * width + x];
       c->type = CELL_EMPTY;
       c->pheromone_food = 0.0f;
@@ -81,12 +81,17 @@ void world_vacate_cell(World *w, AntVector p) {
   c->type = CELL_EMPTY;
 }
 
+Cell world_get_cell(World *w, AntVector p) {
+  return w->grid[(int)p.y * w->width + (int)p.x];
+}
+
 void nest_update_radius(AntNest *nest) {
   if (!nest) {
     return;
   }
   // updates radius based on stored food amount
-  nest->radius = NEST_INITIAL_RADIUS + (nest->stored_food / 10);
+  nest->radius =
+      NEST_INITIAL_RADIUS + (nest->stored_food / NEST_RADIUS_GROWTH_FACTOR);
 }
 
 void nest_set_food(AntNest *nest, int amount) {

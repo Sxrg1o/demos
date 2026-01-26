@@ -1,8 +1,6 @@
 #ifndef RENDER_H
 #define RENDER_H
 
-#include "../../entities/ant.h"
-#include "../../entities/resource.h"
 #include "../world/ant_world.h"
 #include <stdint.h>
 

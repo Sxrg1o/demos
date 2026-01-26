@@ -1,7 +1,6 @@
-#include "engine/logic/simulation.h"
-#include "engine/render/render.h"
-#include "engine/world/ant_world.h"
-#include "engine/world/generation.h"
+#include "engine/core/ant_generation.h"
+#include "engine/core/ant_simulation.h"
+#include "engine/render/ant_render.h"
 #include <raylib.h>
 
 int main() {

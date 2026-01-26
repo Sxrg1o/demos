@@ -1,4 +1,4 @@
-#include "simulation.h"
+#include "ant_simulation.h"
 #include <stdlib.h>
 
 // Entities Management

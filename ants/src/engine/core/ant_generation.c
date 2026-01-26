@@ -1,5 +1,4 @@
-#include "generation.h"
-#include "ant_world.h"
+#include "ant_generation.h"
 #include <stdlib.h>
 
 void gen_world(World *world, unsigned int seed) {

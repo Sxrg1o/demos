@@ -1,8 +1,8 @@
 #ifndef ANT_WORLD_H
 #define ANT_WORLD_H
 
-#include "../../entities/ant.h"
-#include "../../entities/resource.h"
+#include "ant.h"
+#include "resource.h"
 #include "../logic/ant_math.h"
 #include <stdbool.h>
 #define MAX_ANTS 100
@@ -10,6 +10,7 @@
 #define EVAPORATION_RATE 0.8f
 #define DIFFUSION_RATE 0.2f
 #define NEST_INITIAL_RADIUS 3
+#define NEST_RADIUS_GROWTH_FACTOR 10
 
 typedef struct {
   AntVector position;
@@ -47,6 +48,7 @@ bool world_in_bounds(const World *w, AntVector p);
 bool world_is_occupied(const World *w, AntVector p);
 void world_occupy_cell(World *w, AntVector p, Cell cell);
 void world_vacate_cell(World *w, AntVector p);
+Cell world_get_cell(World *w, AntVector p);
 
 void nest_update_radius(AntNest *nest);
 void nest_set_food(AntNest *nest, int amount);
