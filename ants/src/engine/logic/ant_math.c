@@ -2,17 +2,6 @@
 #include <math.h>
 #include <stdint.h>
 
-bool Position_equals(Position p1, Position p2) {
-  return p1.x == p2.x && p1.y == p2.y;
-}
-
-AntVector AntVector_from_positions(Position from, Position to) {
-  AntVector v;
-  v.x = (double)(to.x - from.x);
-  v.y = (double)(to.y - from.y);
-  return v;
-}
-
 AntVector AntVector_normalize(AntVector v) {
   double len = sqrt(v.x * v.x + v.y * v.y);
   if (len == 0.0)
@@ -28,7 +17,7 @@ AntVector AntVector_add(AntVector v1, AntVector v2) {
   return (AntVector){v1.x + v2.x, v1.y + v2.y};
 }
 
-AntVector AntVector_add_inverse(AntVector v) { return (AntVector){-v.x, -v.y}; }
+AntVector AntVector_reverse(AntVector v) { return (AntVector){-v.x, -v.y}; }
 
 int hash(int x, int y, int seed) {
   int h = seed + x * 374761393 + y * 668265263;
@@ -62,7 +51,7 @@ float noise2d(float x, float y, int seed) {
   return lerp(nx0, nx1, sy);
 }
 
-float dist_sq(Position p1, Position p2) {
+float dist_sq(AntVector p1, AntVector p2) {
   int dx = p1.x - p2.x;
   int dy = p1.y - p2.y;
   return (float)(dx * dx + dy * dy);
