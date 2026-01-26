@@ -34,23 +34,21 @@ void render_world(const World *w) {
         break;
       }
 
-      float p_food = cell.pheromone_to_food;
-      float p_home = cell.pheromone_to_home;
-      float p_visited = cell.pheromone_visited;
+      float p_food = cell.pheromone_food;
+      float p_build = cell.pheromone_build;
 
       // clamp pheromone intensities
       if (p_food < 0)
         p_food = 0;
-      if (p_home < 0)
-        p_home = 0;
-      if (p_visited < 0)
-        p_visited = 0;
-      float max_p = fmaxf(p_food, fmaxf(p_home, p_visited));
+      if (p_build < 0)
+        p_build = 0;
+      float max_p = fmaxf(p_food, p_build);
 
       if (max_p > 0.0001f) {
         unsigned char pr = (unsigned char)fminf(p_food * 255.0f, 255.0f);
-        unsigned char pg = (unsigned char)fminf(p_visited * 200.0f, 255.0f);
-        unsigned char pb = (unsigned char)fminf(p_home * 255.0f, 255.0f);
+        unsigned char pg =
+            (unsigned char)fminf((p_food + p_build) / 2.0f * 255.0f, 255.0f);
+        unsigned char pb = (unsigned char)fminf(p_build * 255.0f, 255.0f);
 
         Color pher = {pr, pg, pb, 255};
         float t = fminf(max_p, 1.0f);
