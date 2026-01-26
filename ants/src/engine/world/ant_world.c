@@ -85,19 +85,3 @@ void world_vacate_cell(World *w, AntVector p) {
 Cell world_get_cell(World *w, AntVector p) {
   return w->grid[(int)p.y * w->width + (int)p.x];
 }
-
-void nest_update_radius(AntNest *nest) {
-  if (!nest) {
-    return;
-  }
-  // updates radius based on stored food amount
-  nest->radius =
-      NEST_INITIAL_RADIUS + (nest->stored_food / NEST_RADIUS_GROWTH_FACTOR);
-}
-
-void nest_set_food(AntNest *nest, int amount) {
-  if (!nest) {
-    return;
-  }
-  nest->stored_food = amount;
-}

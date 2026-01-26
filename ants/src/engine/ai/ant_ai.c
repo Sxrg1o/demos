@@ -1,7 +1,9 @@
 #include "ant_ai.h"
+#include <math.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
-// --- Helper Functions ---
+double random_noise() { return ((double)(rand() % 100) / 50.0) - 1.0; }
 
 static bool can_move_to(World *w, AntVector pos) {
   if (!world_in_bounds(w, pos)) {
@@ -18,6 +20,9 @@ static void move_ant_to(Ant *a, World *w, AntVector new_pos) {
 
   world_occupy_cell(w, new_pos, c);
   a->position = new_pos;
+
+  a->vector_to_nest =
+      AntVector_add(w->nest.position, AntVector_reverse(a->position));
 }
 
 // --- Actions ---
@@ -108,16 +113,32 @@ void ant_go(Ant *a, World *w, AntVector target) {
 }
 
 void ant_update(Ant *a, World *w) {
+  double dist_sq = (a->vector_to_nest.x * a->vector_to_nest.x) +
+                   (a->vector_to_nest.y * a->vector_to_nest.y);
+  double dist = sqrt(dist_sq);
+
+  AntVector desired_dir = {0, 0};
+
   switch (a->state) {
-  case EXPLORING:
+  case BUILDING:
     break;
-  case RETURNING:
+  case EXPLORING:
     break;
   case HARVESTING:
     break;
   case RECRUITING:
     break;
-  case BUILDING:
+  case RETURNING:
+    desired_dir = a->vector_to_nest;
+
+    if (dist < 1.0) {
+      ant_drop(a, w, a->position);
+      a->state = EXPLORING;
+    }
     break;
   }
+  AntVector target = {a->position.x + desired_dir.x + random_noise(),
+                      a->position.y + desired_dir.y + random_noise()};
+
+  ant_go(a, w, target);
 }

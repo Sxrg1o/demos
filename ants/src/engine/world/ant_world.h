@@ -1,24 +1,12 @@
 #ifndef ANT_WORLD_H
 #define ANT_WORLD_H
 
-#include "ant.h"
+#include "ant_nest.h"
 #include "resource.h"
-#include "../logic/ant_math.h"
 #include <stdbool.h>
-#define MAX_ANTS 100
 
 #define EVAPORATION_RATE 0.8f
 #define DIFFUSION_RATE 0.2f
-#define NEST_INITIAL_RADIUS 3
-#define NEST_RADIUS_GROWTH_FACTOR 10
-
-typedef struct {
-  AntVector position;
-  int radius;
-  int stored_food;
-  Ant ants[MAX_ANTS];
-  int num_ants;
-} AntNest;
 
 typedef enum {
   CELL_EMPTY,
@@ -51,6 +39,4 @@ void world_occupy_cell(World *w, AntVector p, Cell cell);
 void world_vacate_cell(World *w, AntVector p);
 Cell world_get_cell(World *w, AntVector p);
 
-void nest_update_radius(AntNest *nest);
-void nest_set_food(AntNest *nest, int amount);
 #endif // ANT_WORLD_H

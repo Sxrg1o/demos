@@ -1,4 +1,5 @@
 #include "ant_simulation.h"
+#include "../ai/ant_ai.h"
 #include <stdlib.h>
 
 // Entities Management
@@ -57,6 +58,10 @@ bool entity_spawn_food(World *w, AntVector p, int radius) {
 void system_update_world(World *w) {
   if (!w) {
     return;
+  }
+
+  for (int i = 0; i < w->nest.num_ants; i++) {
+    ant_update(&w->nest.ants[i], w);
   }
 
   /* Pheromone diffusion + evaporation + source injection */

@@ -5,7 +5,7 @@ void ant_init(Ant *ant, int ant_id, AntVector pos, AntVector nest_pos) {
     return;
 
   ant->position = pos;
-  ant->vector_to_nest = AntVector_add(pos, AntVector_reverse(nest_pos));
+  ant->vector_to_nest = AntVector_add(nest_pos, AntVector_reverse(pos));
   ant->id = ant_id;
   ant->state = RETURNING;
   ant->is_carrying = false;
